@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>MBMessageMessag — Messenger v7</title>
+<title>MBMessage — Messenger</title>
 
 <!-- Supabase -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -601,6 +601,20 @@ button {
     background: var(--panel2);
 }
 
+/* FRIENDS / ADMIN */
+.feature-row{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
+.feature-btn{flex:1;min-width:0;height:40px;border-radius:11px;background:var(--panel2);color:var(--text);border:1px solid var(--border);font-weight:700}
+.feature-btn:hover{border-color:var(--accent);color:var(--accent)}
+.feature-btn.admin{background:rgba(239,68,68,.10);color:#ef4444;border-color:rgba(239,68,68,.25)}
+.badge{display:inline-flex;min-width:18px;height:18px;padding:0 5px;align-items:center;justify-content:center;border-radius:99px;background:#ef4444;color:#fff;font-size:11px;margin-left:5px}
+.friend-tabs{display:flex;gap:6px;margin-bottom:12px}
+.friend-tab{flex:1;height:38px;border-radius:10px;background:var(--panel2);color:var(--muted);font-weight:700}
+.friend-tab.active{background:var(--accent);color:#fff}
+.friend-item{display:flex;align-items:center;gap:10px;padding:10px;border-radius:12px;margin-bottom:6px;background:var(--panel2)}
+.friend-avatar{width:42px;height:42px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:#4f7cff;color:#fff;font-weight:700;background-size:cover;background-position:center;flex-shrink:0}
+.friend-info{flex:1;min-width:0}.friend-name{font-weight:700}.friend-username{font-size:12px;color:var(--muted);margin-top:2px}.friend-actions{display:flex;gap:5px}.small-btn{height:34px;padding:0 9px;border-radius:9px;background:var(--panel);color:var(--text);border:1px solid var(--border);font-weight:700}.small-btn.primary{background:var(--accent);color:#fff;border-color:var(--accent)}.small-btn.danger{color:#ef4444}
+.admin-panel{width:min(760px,calc(100vw - 30px));max-height:min(82vh,760px);overflow:auto}
+.report-card{border:1px solid var(--border);background:var(--panel2);border-radius:14px;padding:13px;margin-bottom:9px}.report-head{display:flex;gap:10px;align-items:flex-start}.report-title{font-weight:800;flex:1}.report-meta{font-size:12px;color:var(--muted);margin-top:3px}.report-reason{margin-top:9px;font-size:14px}.report-details{margin-top:7px;color:var(--muted);font-size:13px;white-space:pre-wrap}.report-actions{display:flex;gap:7px;flex-wrap:wrap;margin-top:11px}.status-pill{font-size:11px;padding:4px 8px;border-radius:999px;background:var(--panel);color:var(--muted);border:1px solid var(--border)}
 /* MOBILE */
 
 .mobile-back {
@@ -699,10 +713,12 @@ button {
         <div class="chat-list" id="chatList"></div>
 
         <div class="sidebar-bottom">
-            <button class="bottom-settings" onclick="openProfile()" title="Настройки профиля">⚙️</button>
-            <button class="new-chat" onclick="openNewChat()">
-                ＋ Новый чат
-            </button>
+            <div class="feature-row">
+                <button class="feature-btn" onclick="openFriends()">👥 Друзья <span id="friendBadge" class="badge" style="display:none">0</span></button>
+                <button class="bottom-settings" onclick="openProfile()" title="Настройки профиля">⚙️</button>
+            </div>
+            <button class="new-chat" onclick="openNewChat()">＋ Новый чат</button>
+            <button id="adminOpenBtn" class="feature-btn admin" onclick="openAdminPanel()" style="display:none;margin-top:8px">🛡️ Админ <span id="reportBadge" class="badge" style="display:none">0</span></button>
         </div>
 
     </aside>
@@ -734,6 +750,7 @@ button {
                 </div>
             </div>
 
+            <button id="reportUserBtn" class="icon-btn" onclick="openReportModal()" title="Пожаловаться на пользователя" style="display:none">⚠️</button>
             <button class="icon-btn" onclick="deleteCurrentChat()" title="Удалить чат">
                 🗑️
             </button>
@@ -848,6 +865,47 @@ button {
 </div>
 
 
+<!-- FRIENDS MODAL -->
+<div class="modal-bg" id="friendsModal">
+  <div class="modal" style="max-width:620px;max-height:82vh;overflow:auto">
+    <h2>👥 Друзья <span id="friendsCount" class="profile-hint"></span></h2>
+    <div class="friend-tabs">
+      <button id="friendsTabBtn" class="friend-tab active" onclick="switchFriendsTab('friends')">Мои друзья</button>
+      <button id="requestsTabBtn" class="friend-tab" onclick="switchFriendsTab('requests')">Заявки <span id="requestBadgeInModal" class="badge" style="display:none">0</span></button>
+    </div>
+    <div id="friendsList"></div>
+    <div class="modal-actions"><button class="cancel-btn" onclick="closeFriends()">Закрыть</button><button class="confirm-btn" onclick="openNewChat();closeFriends();">Найти пользователя</button></div>
+  </div>
+</div>
+
+<!-- REPORT MODAL -->
+<div class="modal-bg" id="reportModal">
+  <div class="modal">
+    <h2>⚠️ Пожаловаться</h2>
+    <div id="reportTargetHint" class="profile-hint" style="margin-bottom:12px"></div>
+    <select id="reportReason" style="width:100%;height:44px;border:1px solid var(--border);border-radius:11px;background:var(--panel2);color:var(--text);padding:0 12px;margin-bottom:12px">
+      <option>Расизм / разжигание ненависти</option>
+      <option>Распространение запрещённого контента</option>
+      <option>Спам / мошенничество</option>
+      <option>Оскорбления / травля</option>
+      <option>Угрозы</option>
+      <option>Другое</option>
+    </select>
+    <textarea id="reportDetails" placeholder="Дополнительные сведения (необязательно)" style="width:100%;min-height:100px;resize:vertical;border:1px solid var(--border);border-radius:11px;background:var(--panel2);color:var(--text);padding:11px 12px;margin-bottom:12px"></textarea>
+    <div class="modal-actions"><button class="cancel-btn" onclick="closeReportModal()">Отмена</button><button class="confirm-btn" onclick="submitReport()">Отправить жалобу</button></div>
+  </div>
+</div>
+
+<!-- ADMIN PANEL -->
+<div class="modal-bg" id="adminModal">
+  <div class="modal admin-panel">
+    <h2>🛡️ Админ-чат — жалобы</h2>
+    <div class="profile-hint" style="margin-bottom:12px">Здесь отображаются обращения пользователей в формате модерационного чата.</div>
+    <div id="adminReportsList"></div>
+    <div class="modal-actions"><button class="cancel-btn" onclick="closeAdminPanel()">Закрыть</button><button class="confirm-btn" onclick="loadAdminReports()">Обновить</button></div>
+  </div>
+</div>
+
 <!-- PROFILE MODAL -->
 
 <div class="modal-bg" id="profileModal">
@@ -893,6 +951,11 @@ let currentChatId = chats.length > 0
     : null;
 
 let user = loadUser();
+let friendsData = [];
+let incomingRequests = [];
+let friendsTab = "friends";
+let isCurrentAdmin = false;
+let adminRealtimeChannel = null;
 
 
 /* =========================
@@ -1226,6 +1289,9 @@ function openChat(id) {
             chat.online
                 ? "● В сети"
                 : "Был(а) недавно";
+
+    const reportBtn=document.getElementById("reportUserBtn");
+    if(reportBtn) reportBtn.style.display=chat.remoteId ? "block" : "none";
 
     renderMessages();
 
@@ -1584,8 +1650,10 @@ async function createChat() {
             unEl.className = "user-search-username";
             unEl.textContent = "@" + u.username;
             info.append(nameEl, unEl);
-            item.append(av, info);
-            results.appendChild(item);
+            const actions=document.createElement("div"); actions.style.marginLeft="auto"; actions.style.display="flex"; actions.style.gap="5px";
+            const chatBtn=document.createElement("button"); chatBtn.className="small-btn primary"; chatBtn.textContent="Чат"; chatBtn.onclick=(ev)=>{ev.stopPropagation();selectSearchUser(u);};
+            const friendBtn=document.createElement("button"); friendBtn.className="small-btn"; friendBtn.textContent="Добавить"; friendBtn.onclick=(ev)=>{ev.stopPropagation();sendFriendRequest(u.id);};
+            actions.append(chatBtn,friendBtn); item.append(av, info, actions); results.appendChild(item);
         });
     } catch (e) {
         console.error(e);
@@ -1633,6 +1701,144 @@ async function loadRemoteConversation(chat) {
         saveChats();
         if (currentChatId === chat.id) { renderMessages(); renderChats(); scrollMessages(); }
     } catch (e) { console.error("Conversation:", e); }
+}
+
+
+/* =========================
+   FRIENDS
+========================= */
+
+function openFriends(){
+    document.getElementById("friendsModal").classList.add("show");
+    switchFriendsTab(friendsTab);
+    loadFriendsData();
+}
+function closeFriends(){document.getElementById("friendsModal").classList.remove("show");}
+function switchFriendsTab(tab){
+    friendsTab=tab;
+    document.getElementById("friendsTabBtn").classList.toggle("active",tab==="friends");
+    document.getElementById("requestsTabBtn").classList.toggle("active",tab==="requests");
+    renderFriendsModal();
+}
+function updateFriendBadges(){
+    const n=incomingRequests.length;
+    const b=document.getElementById("friendBadge"), m=document.getElementById("requestBadgeInModal");
+    [b,m].forEach(x=>{if(!x)return;x.textContent=n;x.style.display=n?"inline-flex":"none";});
+}
+async function loadFriendsData(){
+    if(typeof window.getFriendsData!=="function") return;
+    try{
+        const d=await window.getFriendsData();
+        friendsData=d.friends||[];
+        incomingRequests=d.incoming||[];
+        updateFriendBadges();
+        renderFriendsModal();
+        await syncPersistentChats();
+    }catch(e){console.error("Friends:",e)}
+}
+function friendAvatarHtml(u){
+    const url=u.avatar_url||u.avatarUrl;
+    return url ? `<div class="friend-avatar" style="background-image:url('${String(url).replace(/'/g,"%27")}')"></div>` : `<div class="friend-avatar">${escapeHtml(getInitials(u.username||u.name||"?"))}</div>`;
+}
+function escapeHtml(v){return String(v??"").replace(/[&<>'"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;","'":"&#39;",'"':"&quot;"}[c]));}
+function renderFriendsModal(){
+    const box=document.getElementById("friendsList"); if(!box)return;
+    if(friendsTab==="friends"){
+        document.getElementById("friendsCount").textContent=`(${friendsData.length})`;
+        if(!friendsData.length){box.innerHTML='<div class="profile-hint">Пока нет друзей. Откройте «Найти пользователя», чтобы отправить заявку.</div>';return;}
+        box.innerHTML="";
+        friendsData.forEach(u=>{
+            const row=document.createElement("div");row.className="friend-item";
+            row.innerHTML=`${friendAvatarHtml(u)}<div class="friend-info"><div class="friend-name">${escapeHtml(u.username)}</div><div class="friend-username">@${escapeHtml(u.username)}</div></div><div class="friend-actions"><button class="small-btn primary">Написать</button><button class="small-btn danger">Удалить</button></div>`;
+            row.querySelector(".primary").onclick=()=>{closeFriends();selectSearchUser(u)};
+            row.querySelector(".danger").onclick=async()=>{if(confirm(`Удалить @${u.username} из друзей?`)){await window.removeFriend(u.id);await loadFriendsData();}};
+            box.appendChild(row);
+        });
+    }else{
+        document.getElementById("friendsCount").textContent=`(${incomingRequests.length})`;
+        if(!incomingRequests.length){box.innerHTML='<div class="profile-hint">Новых заявок нет.</div>';return;}
+        box.innerHTML="";
+        incomingRequests.forEach(r=>{
+            const u=r.requester||{}; const row=document.createElement("div");row.className="friend-item";
+            row.innerHTML=`${friendAvatarHtml(u)}<div class="friend-info"><div class="friend-name">${escapeHtml(u.username||"Пользователь")}</div><div class="friend-username">@${escapeHtml(u.username||"")}</div></div><div class="friend-actions"><button class="small-btn primary">Принять</button><button class="small-btn danger">Отклонить</button></div>`;
+            row.querySelector(".primary").onclick=async()=>{await window.respondFriendRequest(r.id,"accepted");await loadFriendsData();};
+            row.querySelector(".danger").onclick=async()=>{await window.respondFriendRequest(r.id,"rejected");await loadFriendsData();};
+            box.appendChild(row);
+        });
+    }
+}
+async function sendFriendRequest(userId){
+    try{await window.sendFriendRequest(userId);alert("Заявка отправлена!");await loadFriendsData();}
+    catch(e){alert("Не удалось отправить заявку: "+e.message)}
+}
+
+/* =========================
+   PERSISTENT CHAT HISTORY
+========================= */
+async function syncPersistentChats(){
+    if(typeof window.loadMessengerData!="function") return;
+    try{
+        const rows=await window.loadMessengerData();
+        const map=new Map(chats.filter(c=>c.remoteId).map(c=>[c.remoteId,c]));
+        for(const f of friendsData){
+            if(!map.has(f.id)){
+                const c={id:"remote_"+f.id,remoteId:f.id,name:f.username,username:f.username,avatar:getInitials(f.username),avatarUrl:f.avatar_url||null,color:"#4f7cff",online:false,messages:[]};
+                chats.unshift(c);map.set(f.id,c);
+            }
+        }
+        for(const m of rows.messages||[]){
+            const other=m.sender_id===currentUser?.id?m.receiver_id:m.sender_id;
+            if(!other)continue;
+            let c=map.get(other);
+            if(!c){
+                const prof=await window.getMessengerProfileById(other); if(!prof)continue;
+                c={id:"remote_"+other,remoteId:other,name:prof.username,username:prof.username,avatar:getInitials(prof.username),avatarUrl:prof.avatar_url||null,color:"#4f7cff",online:false,messages:[]};
+                chats.unshift(c);map.set(other,c);
+            }
+            if(!c.messages.some(x=>String(x.id)===String(m.id))) c.messages.push({id:m.id,text:m.content||"",mine:m.sender_id===currentUser.id,time:new Date(m.created_at).toLocaleTimeString("ru-RU",{hour:"2-digit",minute:"2-digit"})});
+        }
+        chats.forEach(c=>{if(c.remoteId)c.messages.sort((a,b)=>Number(a.id)-Number(b.id));});
+        saveChats();renderChats();
+        if(currentChatId && document.getElementById("messages")) renderMessages();
+    }catch(e){console.error("History sync:",e)}
+}
+
+/* =========================
+   REPORTS / ADMIN CHAT
+========================= */
+function openReportModal(){
+    const chat=chats.find(c=>c.id===currentChatId); if(!chat?.remoteId)return;
+    document.getElementById("reportTargetHint").textContent=`Жалоба на @${chat.username||chat.name}`;
+    document.getElementById("reportDetails").value="";
+    document.getElementById("reportModal").classList.add("show");
+}
+function closeReportModal(){document.getElementById("reportModal").classList.remove("show");}
+async function submitReport(){
+    const chat=chats.find(c=>c.id===currentChatId); if(!chat?.remoteId)return;
+    try{
+        await window.submitMessengerReport(chat.remoteId,document.getElementById("reportReason").value,document.getElementById("reportDetails").value.trim());
+        closeReportModal(); alert("Жалоба отправлена администрации.");
+    }catch(e){alert("Не удалось отправить жалобу: "+e.message)}
+}
+function openAdminPanel(){if(!isCurrentAdmin)return;document.getElementById("adminModal").classList.add("show");loadAdminReports();}
+function closeAdminPanel(){document.getElementById("adminModal").classList.remove("show");}
+function renderAdminReports(reports){
+    const box=document.getElementById("adminReportsList");
+    if(!reports?.length){box.innerHTML='<div class="profile-hint">Новых жалоб нет.</div>';return;}
+    box.innerHTML="";
+    reports.forEach(r=>{
+        const card=document.createElement("div");card.className="report-card";
+        const status=r.status||"open";
+        card.innerHTML=`<div class="report-head"><div><div class="report-title">На пользователя @${escapeHtml(r.reported?.username||"неизвестно")} пожаловались</div><div class="report-meta">От: @${escapeHtml(r.reporter?.username||"неизвестно")} · ${new Date(r.created_at).toLocaleString("ru-RU")}</div></div><span class="status-pill">${escapeHtml(status)}</span></div><div class="report-reason"><b>Причина:</b> ${escapeHtml(r.reason)}</div>${r.details?`<div class="report-details">${escapeHtml(r.details)}</div>`:""}<div class="report-actions"><button class="small-btn">Закрыть</button><button class="small-btn danger">Заблокировать</button><button class="small-btn primary">Открыть чат</button></div>`;
+        card.querySelector(".small-btn").onclick=async()=>{await window.updateReportStatus(r.id,"resolved");loadAdminReports();};
+        card.querySelector(".danger").onclick=async()=>{if(confirm(`Заблокировать @${r.reported?.username||"пользователя"}?`)){await window.adminBanUser(r.reported_user_id,r.reason);await window.updateReportStatus(r.id,"resolved");loadAdminReports();}};
+        card.querySelector(".primary").onclick=async()=>{const u=r.reported;if(!u)return;closeAdminPanel();selectSearchUser(u);};
+        box.appendChild(card);
+    });
+}
+async function loadAdminReports(){
+    if(!isCurrentAdmin||typeof window.getAdminReports!=="function")return;
+    try{const rows=await window.getAdminReports();renderAdminReports(rows);document.getElementById("reportBadge").style.display="none";}catch(e){document.getElementById("adminReportsList").innerHTML='<div class="profile-hint">Ошибка загрузки жалоб: '+escapeHtml(e.message)+'</div>';}
 }
 
 /* =========================
@@ -1792,6 +1998,10 @@ document
     });
 
 
+document.getElementById("friendsModal")?.addEventListener("click",e=>{if(e.target.id==="friendsModal")closeFriends();});
+document.getElementById("reportModal")?.addEventListener("click",e=>{if(e.target.id==="reportModal")closeReportModal();});
+document.getElementById("adminModal")?.addEventListener("click",e=>{if(e.target.id==="adminModal")closeAdminPanel();});
+
 /* ENTER IN MODALS */
 
 document
@@ -1902,7 +2112,7 @@ loadTheme();
 <input id="sb-username" type="text" autocomplete="nickname" placeholder="Имя пользователя (для регистрации)" style="display:none">
 <button id="sb-auth-login">Войти</button>
 <button id="sb-auth-signup">Регистрация</button>
-<div id="sb-auth-status"></div><div style="margin-top:12px;font-size:12px;opacity:.72;line-height:1.4">📱 Для телефона откройте мессенджер по адресу этого компьютера в локальной сети (например, http://192.168.1.5:5500) или разместите HTML на публичном хостинге.</div>
+<div id="sb-auth-status"></div>
 </div></div>
 <div id="sb-userbar"><span id="sb-user-name"></span><button id="sb-logout">Выйти</button></div>
 <script>
@@ -1910,7 +2120,7 @@ loadTheme();
 const SB_URL="https://nwzpaealogymfzmzfbei.supabase.co";
 const SB_KEY="sb_publishable_OBVm01c-hIKRXBVlRD0hlQ_fu4eM1cn";
 
-const sb=window.supabase.createClient(SB_URL,SB_KEY);
+const sb=window.supabase.createClient(SB_URL,SB_KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:false,storageKey:"mbmessage-auth"}});
 
 function checkMessengerProtocol(){
   if(location.protocol==="file:"){
@@ -1935,6 +2145,9 @@ function showApp(u,p){
   overlay.style.display="none";
   userbar.style.display="flex";
   userName.textContent=p?.username||u.email||"Пользователь";
+  isCurrentAdmin=isAdminUser(u);
+  const adminBtn=document.getElementById("adminOpenBtn"); if(adminBtn) adminBtn.style.display=isCurrentAdmin?"block":"none";
+  setTimeout(()=>{loadFriendsData();syncPersistentChats();},0);
 }
 const ADMIN_AUTH_EMAIL="evrikaadmin@evrikamessage.app";
 function isAdminUser(u){return (u?.email||"").toLowerCase()===ADMIN_AUTH_EMAIL;}
@@ -1970,7 +2183,7 @@ loginBtn.onclick=async()=>{
   msg("");
   const loginValue=email.value.trim();
   if(!loginValue)return msg("Введите имя пользователя или email.");
-  // Отдельный вход администратора: MBMessageAdmin -> реальный Auth email.
+  // Отдельный вход администратора: EvrikaAdmin -> реальный Auth email.
   const authEmail=loginValue.toLowerCase()==="evrikaadmin"
     ? ADMIN_AUTH_EMAIL
     : loginValue;
@@ -1995,7 +2208,7 @@ try{let p=await ensureProfile(data.user,un);showApp(data.user,p);subscribeRealti
 logoutBtn.onclick=async()=>{
   currentUser=null;
   showLogin();
-  if(realtimeChannel){try{await sb.removeChannel(realtimeChannel);}catch(e){console.warn(e)}realtimeChannel=null;}
+  if(realtimeChannel){try{await sb.removeChannel(realtimeChannel);}catch(e){console.warn(e)}realtimeChannel=null;} if(adminRealtimeChannel){try{await sb.removeChannel(adminRealtimeChannel);}catch(e){console.warn(e)}adminRealtimeChannel=null;}
   try{ await sb.auth.signOut({scope:"local"}); }catch(e){ console.warn("signOut:",e); }
 };
 // ВАЖНО: callback не должен делать await запросов Supabase внутри onAuthStateChange.
@@ -2048,7 +2261,7 @@ window.updateMessengerProfile=async({username,avatar_url})=>{
   user.avatarUrl=avatar_url||null;
   saveUser();
   if(typeof updateProfile==="function") updateProfile();
-  userName.textContent="@"+clean;
+  userName.textContent=clean;
   const ud=document.getElementById("profileUsernameDisplay");
   if(ud) ud.textContent="@"+data.username;
   return data;
@@ -2123,13 +2336,53 @@ window.addMessageToChat=async function(m){
   if(currentChatId===chat.id){ renderMessages(); scrollMessages(); }
 };
 
-function subscribeRealtime(){if(!currentUser||realtimeChannel)return;realtimeChannel=sb.channel("messenger-messages-"+currentUser.id).on("postgres_changes",{event:"INSERT",schema:"public",table:"messages"},payload=>{let m=payload.new;if(m.sender_id!==currentUser.id&&m.receiver_id===currentUser.id){let fn=window.addMessageToChat||window.renderMessage||window.receiveMessage;if(typeof fn==="function")fn(m);else console.log("Новое сообщение:",m)}}).subscribe()}
+function subscribeRealtime(){
+  if(!currentUser||realtimeChannel)return;
+  realtimeChannel=sb.channel("mbmessage-user-"+currentUser.id)
+    .on("postgres_changes",{event:"INSERT",schema:"public",table:"messages"},payload=>{let m=payload.new;if(m.sender_id!==currentUser.id&&m.receiver_id===currentUser.id){let fn=window.addMessageToChat||window.renderMessage||window.receiveMessage;if(typeof fn==="function")fn(m);else console.log("Новое сообщение:",m)}})
+    .on("postgres_changes",{event:"*",schema:"public",table:"friend_requests"},()=>loadFriendsData())
+    .subscribe();
+  if(isCurrentAdmin){
+    adminRealtimeChannel=sb.channel("mbmessage-admin-reports").on("postgres_changes",{event:"*",schema:"public",table:"reports"},()=>{const b=document.getElementById("reportBadge");if(b){b.textContent="!";b.style.display="inline-flex";} if(document.getElementById("adminModal")?.classList.contains("show"))loadAdminReports();}).subscribe();
+  }
+}
 window.sendMessengerMessage=async(receiverId,text)=>{if(!currentUser)throw new Error("Сначала войдите в аккаунт.");let content=String(text||"").trim();if(!content)return null;let {data,error}=await sb.from("messages").insert({sender_id:currentUser.id,receiver_id:receiverId,content}).select().single();if(error)throw error;return data};
+
+window.getFriendsData=async()=>{
+  if(!currentUser) return {friends:[],incoming:[]};
+  const {data,error}=await sb.from("friend_requests").select("id,requester_id,addressee_id,status,created_at,requester:profiles!friend_requests_requester_id_fkey(id,username,avatar_url),addressee:profiles!friend_requests_addressee_id_fkey(id,username,avatar_url)").or("requester_id.eq."+currentUser.id+",addressee_id.eq."+currentUser.id).order("created_at",{ascending:false});
+  if(error)throw error;
+  const friends=[],incoming=[];
+  for(const r of data||[]){
+    if(r.status==="accepted") friends.push(r.requester_id===currentUser.id?r.addressee:r.requester);
+    else if(r.status==="pending" && r.addressee_id===currentUser.id) incoming.push(r);
+  }
+  const uniq=new Map(friends.filter(Boolean).map(x=>[x.id,x]));
+  return {friends:[...uniq.values()],incoming};
+};
+window.sendFriendRequest=async userId=>{
+  if(!currentUser)throw new Error("Сначала войдите в аккаунт.");
+  if(userId===currentUser.id)throw new Error("Нельзя добавить самого себя.");
+  const {data:existing,error:e1}=await sb.from("friend_requests").select("id,status,requester_id,addressee_id").or("and(requester_id.eq."+currentUser.id+",addressee_id.eq."+userId+"),and(requester_id.eq."+userId+",addressee_id.eq."+currentUser.id+")").limit(1);
+  if(e1)throw e1;
+  if(existing?.length){if(existing[0].status==="accepted")throw new Error("Вы уже друзья.");if(existing[0].status==="pending")throw new Error("Заявка уже существует.");await sb.from("friend_requests").delete().eq("id",existing[0].id);}
+  const {error}=await sb.from("friend_requests").insert({requester_id:currentUser.id,addressee_id:userId,status:"pending"}); if(error)throw error;
+};
+window.respondFriendRequest=async(id,status)=>{const {error}=await sb.from("friend_requests").update({status}).eq("id",id).eq("addressee_id",currentUser.id);if(error)throw error;};
+window.removeFriend=async userId=>{const {error}=await sb.from("friend_requests").delete().or("and(requester_id.eq."+currentUser.id+",addressee_id.eq."+userId+"),and(requester_id.eq."+userId+",addressee_id.eq."+currentUser.id+")");if(error)throw error;};
+window.loadMessengerData=async()=>{if(!currentUser)throw new Error("Сначала войдите в аккаунт.");const {data,error}=await sb.from("messages").select("id,sender_id,receiver_id,content,created_at").or("sender_id.eq."+currentUser.id+",receiver_id.eq."+currentUser.id).order("created_at",{ascending:true});if(error)throw error;return {messages:data||[]};};
+window.submitMessengerReport=async(reportedId,reason,details)=>{if(!currentUser)throw new Error("Сначала войдите в аккаунт.");const {error}=await sb.from("reports").insert({reporter_id:currentUser.id,reported_user_id:reportedId,reason,details:details||"",status:"open"});if(error)throw error;};
+window.getAdminReports=async()=>{const {data,error}=await sb.from("reports").select("id,reporter_id,reported_user_id,reason,details,status,created_at,reporter:profiles!reports_reporter_id_fkey(id,username,avatar_url),reported:profiles!reports_reported_user_id_fkey(id,username,avatar_url)").order("created_at",{ascending:false});if(error)throw error;return data||[];};
+window.updateReportStatus=async(id,status)=>{const {error}=await sb.from("reports").update({status,handled_by:currentUser.id,handled_at:new Date().toISOString()}).eq("id",id);if(error)throw error;};
+window.adminBanUser=async(userId,reason)=>{const {error}=await sb.from("banned_users").upsert({user_id:userId,reason:reason||"Нарушение правил",banned_by:currentUser.id});if(error)throw error;};
+
 window.getMessengerUser=()=>currentUser;
 window.searchMessengerUsers=async q=>{q=String(q||"").trim().replace(/^@+/,"").toLowerCase();if(!/^[a-z0-9_]{3,30}$/.test(q))return [];let {data,error}=await sb.from("profiles").select("id,username,avatar_url").eq("username",q).limit(1);if(error)throw error;return data||[]};
 window.getMessengerProfileById=async id=>{let {data,error}=await sb.from("profiles").select("id,username,avatar_url").eq("id",id).maybeSingle();if(error)throw error;return data};
 window.loadMessengerConversation=async other=>{if(!currentUser)throw new Error("Сначала войдите в аккаунт.");let {data,error}=await sb.from("messages").select("id,sender_id,receiver_id,content,created_at").or("and(sender_id.eq."+currentUser.id+",receiver_id.eq."+other+"),and(sender_id.eq."+other+",receiver_id.eq."+currentUser.id+")").order("created_at",{ascending:true});if(error)throw error;return data||[]};
 initSession();
+window.addEventListener("focus",()=>{setTimeout(()=>{if(currentUser) {loadFriendsData();syncPersistentChats();}},100);});
+document.addEventListener("visibilitychange",()=>{if(!document.hidden&&currentUser){setTimeout(()=>{loadFriendsData();syncPersistentChats();},100);}});
 })();
 </script>
 
