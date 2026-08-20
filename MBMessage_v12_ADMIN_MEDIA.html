@@ -1,0 +1,3370 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MBMessage — Messenger v12</title>
+
+<!-- Supabase -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<style>
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+:root {
+    --bg: #f3f5f8;
+    --panel: #ffffff;
+    --panel2: #f7f8fa;
+    --text: #17202a;
+    --muted: #7b8794;
+    --border: #e4e8ed;
+    --accent: #4f7cff;
+    --accent-hover: #3d68df;
+    --message: #e9eefc;
+    --mine: #4f7cff;
+    --mine-text: #ffffff;
+    --danger: #ef4444;
+    --shadow: 0 10px 35px rgba(0,0,0,.08);
+}
+
+body.dark {
+    --bg: #11151b;
+    --panel: #181d25;
+    --panel2: #202630;
+    --text: #f1f5f9;
+    --muted: #8e99a8;
+    --border: #2b333f;
+    --accent: #5b83ff;
+    --accent-hover: #7698ff;
+    --message: #252d38;
+    --mine: #4f72d9;
+    --mine-text: #ffffff;
+    --shadow: 0 10px 35px rgba(0,0,0,.3);
+}
+
+body {
+    font-family: Arial, Helvetica, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    height: 100vh;
+    overflow: hidden;
+}
+
+button,
+input,
+textarea {
+    font-family: inherit;
+}
+
+button {
+    cursor: pointer;
+    border: none;
+}
+
+.app {
+    width: 100%;
+    height: 100vh;
+    display: flex;
+}
+
+/* SIDEBAR */
+
+.sidebar {
+    width: 340px;
+    min-width: 340px;
+    background: var(--panel);
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+}
+
+.sidebar-top {
+    padding: 18px;
+    border-bottom: 1px solid var(--border);
+}
+
+.profile {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 18px;
+}
+
+.avatar {
+    width: 46px;
+    height: 46px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, #5c7cff, #8c63ff);
+    color: white;
+    font-weight: bold;
+    font-size: 18px;
+    flex-shrink: 0;
+    overflow: hidden;
+    background-size: cover;
+    background-position: center;
+}
+
+.profile-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.profile-name {
+    font-size: 16px;
+    font-weight: 700;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.profile-status {
+    color: #38b66b;
+    font-size: 13px;
+    margin-top: 3px;
+}
+
+.icon-btn {
+    width: 38px;
+    height: 38px;
+    border-radius: 10px;
+    background: transparent;
+    color: var(--muted);
+    font-size: 19px;
+}
+
+.icon-btn:hover {
+    background: var(--panel2);
+    color: var(--text);
+}
+
+.search {
+    position: relative;
+}
+
+.search input {
+    width: 100%;
+    height: 42px;
+    border: 1px solid var(--border);
+    background: var(--panel2);
+    color: var(--text);
+    border-radius: 12px;
+    outline: none;
+    padding: 0 14px 0 40px;
+    font-size: 14px;
+}
+
+.search input:focus {
+    border-color: var(--accent);
+}
+
+.search-icon {
+    position: absolute;
+    left: 14px;
+    top: 11px;
+    color: var(--muted);
+}
+
+.chat-list {
+    flex: 1;
+    overflow-y: auto;
+    padding: 8px;
+}
+
+.chat-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px;
+    border-radius: 12px;
+    margin-bottom: 3px;
+    cursor: pointer;
+}
+
+.chat-item:hover {
+    background: var(--panel2);
+}
+
+.chat-item.active {
+    background: rgba(79,124,255,.13);
+}
+
+.chat-avatar {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: bold;
+    flex-shrink: 0;
+    font-size: 17px;
+}
+
+.chat-info {
+    min-width: 0;
+    flex: 1;
+}
+
+.chat-row {
+    display: flex;
+    justify-content: space-between;
+    gap: 8px;
+}
+
+.chat-name {
+    font-weight: 700;
+    font-size: 15px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.chat-time {
+    font-size: 11px;
+    color: var(--muted);
+    white-space: nowrap;
+}
+
+.chat-preview {
+    margin-top: 5px;
+    color: var(--muted);
+    font-size: 13px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.sidebar-bottom {
+    padding: 12px;
+    border-top: 1px solid var(--border);
+}
+
+.new-chat {
+    width: 100%;
+    height: 44px;
+    border-radius: 12px;
+    background: var(--accent);
+    color: white;
+    font-weight: bold;
+    font-size: 14px;
+}
+
+.new-chat:hover {
+    background: var(--accent-hover);
+}
+
+.bottom-settings {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    background: var(--panel2);
+    color: var(--muted);
+    border: 1px solid var(--border);
+    font-size: 20px;
+    margin-bottom: 10px;
+    cursor: pointer;
+}
+
+.bottom-settings:hover {
+    background: var(--panel2);
+    color: var(--text);
+    border-color: var(--accent);
+}
+
+/* CHAT */
+
+.chat {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+.chat-header {
+    height: 76px;
+    background: var(--panel);
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 0 20px;
+}
+
+.chat-header-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.chat-header-name {
+    font-weight: 700;
+    font-size: 17px;
+}
+
+.chat-header-status {
+    color: #38b66b;
+    font-size: 12px;
+    margin-top: 4px;
+}
+
+.messages {
+    flex: 1;
+    overflow-y: auto;
+    padding: 25px;
+    background:
+        radial-gradient(circle at 20% 20%, rgba(79,124,255,.035), transparent 25%),
+        radial-gradient(circle at 80% 70%, rgba(140,99,255,.035), transparent 25%),
+        var(--bg);
+}
+
+.date-separator {
+    display: flex;
+    justify-content: center;
+    margin: 5px 0 20px;
+}
+
+.date-separator span {
+    background: var(--panel);
+    color: var(--muted);
+    font-size: 11px;
+    padding: 6px 11px;
+    border-radius: 20px;
+    box-shadow: 0 2px 10px rgba(0,0,0,.04);
+}
+
+.message {
+    display: flex;
+    margin-bottom: 10px;
+}
+
+.message.mine {
+    justify-content: flex-end;
+}
+
+.message-content {
+    max-width: min(650px, 72%);
+    display: flex;
+    flex-direction: column;
+}
+
+.bubble {
+    padding: 10px 13px;
+    border-radius: 15px;
+    background: var(--message);
+    color: var(--text);
+    font-size: 14px;
+    line-height: 1.45;
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+
+.mine .bubble {
+    background: var(--mine);
+    color: var(--mine-text);
+    border-bottom-right-radius: 5px;
+}
+
+.message:not(.mine) .bubble {
+    border-bottom-left-radius: 5px;
+}
+
+.message-meta {
+    margin-top: 4px;
+    font-size: 10px;
+    color: var(--muted);
+    padding: 0 5px;
+}
+
+.mine .message-meta {
+    text-align: right;
+}
+
+.typing {
+    height: 22px;
+    padding: 0 25px;
+    color: var(--muted);
+    font-size: 12px;
+    background: var(--bg);
+}
+
+.composer {
+    background: var(--panel);
+    border-top: 1px solid var(--border);
+    padding: 12px 16px;
+    display: flex;
+    align-items: flex-end;
+    gap: 9px;
+}
+
+.emoji-btn,
+.attach-btn {
+    width: 42px;
+    height: 42px;
+    border-radius: 12px;
+    background: var(--panel2);
+    color: var(--muted);
+    font-size: 20px;
+    flex-shrink: 0;
+}
+
+.emoji-btn:hover,
+.attach-btn:hover {
+    color: var(--text);
+}
+
+.message-input {
+    flex: 1;
+    resize: none;
+    min-height: 42px;
+    max-height: 130px;
+    border: 1px solid var(--border);
+    border-radius: 13px;
+    outline: none;
+    background: var(--panel2);
+    color: var(--text);
+    padding: 11px 13px;
+    font-size: 14px;
+    line-height: 20px;
+}
+
+.message-input:focus {
+    border-color: var(--accent);
+}
+
+.send-btn {
+    height: 42px;
+    padding: 0 18px;
+    border-radius: 12px;
+    background: var(--accent);
+    color: white;
+    font-weight: bold;
+}
+
+.send-btn:hover {
+    background: var(--accent-hover);
+}
+
+/* EMPTY */
+
+.empty {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--muted);
+    text-align: center;
+    padding: 30px;
+}
+
+.empty-box {
+    max-width: 350px;
+}
+
+.empty-icon {
+    font-size: 55px;
+    margin-bottom: 15px;
+}
+
+.empty h2 {
+    color: var(--text);
+    margin-bottom: 8px;
+}
+
+/* MODAL */
+
+.modal-bg {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,.45);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+    padding: 20px;
+}
+
+.modal-bg.show {
+    display: flex;
+}
+
+.modal {
+    width: 100%;
+    max-width: 420px;
+    background: var(--panel);
+    border-radius: 18px;
+    box-shadow: var(--shadow);
+    padding: 22px;
+}
+
+.modal h2 {
+    margin-bottom: 18px;
+}
+
+.modal input {
+    width: 100%;
+    height: 44px;
+    border: 1px solid var(--border);
+    border-radius: 11px;
+    outline: none;
+    padding: 0 13px;
+    background: var(--panel2);
+    color: var(--text);
+    margin-bottom: 14px;
+}
+
+.modal input:focus {
+    border-color: var(--accent);
+}
+
+.profile-avatar-editor { display:flex; align-items:center; gap:14px; margin-bottom:16px; }
+.profile-avatar-preview { width:72px; height:72px; border-radius:50%; display:flex; align-items:center; justify-content:center; background:linear-gradient(135deg,#5c7cff,#8c63ff); color:#fff; font-size:25px; font-weight:700; flex-shrink:0; overflow:hidden; background-size:cover; background-position:center; }
+.profile-avatar-controls { display:flex; flex-direction:column; gap:6px; }
+.profile-avatar-controls label { display:inline-flex; align-items:center; justify-content:center; min-height:38px; padding:0 12px; border-radius:10px; background:var(--panel2); border:1px solid var(--border); color:var(--text); cursor:pointer; font-weight:600; font-size:13px; }
+.profile-avatar-controls input[type="file"] { display:none; }
+.profile-danger { width:100%; margin-top:12px; height:40px; border:0; border-radius:10px; background:#ef4444; color:#fff; font-weight:700; cursor:pointer; }
+.profile-hint { color:var(--muted); font-size:12px; }
+
+.user-search-results {
+    max-height: 240px;
+    overflow-y: auto;
+    margin: -2px 0 14px;
+}
+.user-search-item {
+    display:flex; align-items:center; gap:10px; padding:10px; border-radius:10px; cursor:pointer;
+}
+.user-search-item:hover { background:var(--panel2); }
+.user-search-avatar { width:40px; height:40px; border-radius:50%; display:flex; align-items:center; justify-content:center; color:#fff; font-weight:700; background:#4f7cff; background-size:cover; background-position:center; flex-shrink:0; }
+.user-search-name { font-weight:700; }
+.user-search-username { color:var(--muted); font-size:12px; margin-top:2px; }
+
+.user-search-mod { margin-left:auto; display:flex; align-items:center; gap:6px; position:relative; }
+.moderation-star { font-size:18px; line-height:1; }
+.moderation-star.warning { color:#f2c94c; }
+.moderation-star.trusted { color:#4f8cff; }
+.admin-more-btn { width:32px; height:32px; border-radius:8px; background:var(--panel); color:var(--muted); border:1px solid var(--border); font-size:18px; }
+.admin-more-btn:hover { color:var(--text); border-color:var(--accent); }
+.admin-user-menu { position:fixed; z-index:100000; min-width:210px; padding:6px; border:1px solid var(--border); border-radius:12px; background:var(--panel); box-shadow:0 16px 45px rgba(0,0,0,.22); }
+.admin-user-menu button { width:100%; text-align:left; padding:9px 10px; border-radius:8px; background:transparent; color:var(--text); }
+.admin-user-menu button:hover { background:var(--panel2); }
+.admin-user-menu button.danger { color:#ef4444; }
+
+.modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+}
+
+.cancel-btn,
+.confirm-btn {
+    height: 40px;
+    padding: 0 16px;
+    border-radius: 10px;
+    font-weight: bold;
+}
+
+.cancel-btn {
+    background: var(--panel2);
+    color: var(--text);
+}
+
+.confirm-btn {
+    background: var(--accent);
+    color: white;
+}
+
+/* EMOJI */
+
+.emoji-panel {
+    position: absolute;
+    bottom: 72px;
+    left: 15px;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 10px;
+    display: none;
+    grid-template-columns: repeat(7, 38px);
+    gap: 4px;
+    box-shadow: var(--shadow);
+    z-index: 20;
+}
+
+.emoji-panel.show {
+    display: grid;
+}
+
+.emoji-panel button {
+    width: 38px;
+    height: 38px;
+    border-radius: 8px;
+    background: transparent;
+    font-size: 21px;
+}
+
+.emoji-panel button:hover {
+    background: var(--panel2);
+}
+
+/* FRIENDS / ADMIN */
+.feature-row{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
+.feature-btn{flex:1;min-width:0;height:40px;border-radius:11px;background:var(--panel2);color:var(--text);border:1px solid var(--border);font-weight:700}
+.feature-btn:hover{border-color:var(--accent);color:var(--accent)}
+.feature-btn.admin{background:rgba(239,68,68,.10);color:#ef4444;border-color:rgba(239,68,68,.25)}
+.badge{display:inline-flex;min-width:18px;height:18px;padding:0 5px;align-items:center;justify-content:center;border-radius:99px;background:#ef4444;color:#fff;font-size:11px;margin-left:5px}
+.friend-tabs{display:flex;gap:6px;margin-bottom:12px}
+.friend-tab{flex:1;height:38px;border-radius:10px;background:var(--panel2);color:var(--muted);font-weight:700}
+.friend-tab.active{background:var(--accent);color:#fff}
+.friend-item{display:flex;align-items:center;gap:10px;padding:10px;border-radius:12px;margin-bottom:6px;background:var(--panel2)}
+.friend-avatar{width:42px;height:42px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:#4f7cff;color:#fff;font-weight:700;background-size:cover;background-position:center;flex-shrink:0}
+.friend-info{flex:1;min-width:0}.friend-name{font-weight:700}.friend-username{font-size:12px;color:var(--muted);margin-top:2px}.friend-actions{display:flex;gap:5px}.small-btn{height:34px;padding:0 9px;border-radius:9px;background:var(--panel);color:var(--text);border:1px solid var(--border);font-weight:700}.small-btn.primary{background:var(--accent);color:#fff;border-color:var(--accent)}.small-btn.danger{color:#ef4444}
+.admin-panel{width:min(760px,calc(100vw - 30px));max-height:min(82vh,760px);overflow:auto}
+.report-card{border:1px solid var(--border);background:var(--panel2);border-radius:14px;padding:13px;margin-bottom:9px}.report-head{display:flex;gap:10px;align-items:flex-start}.report-title{font-weight:800;flex:1}.report-meta{font-size:12px;color:var(--muted);margin-top:3px}.report-reason{margin-top:9px;font-size:14px}.report-details{margin-top:7px;color:var(--muted);font-size:13px;white-space:pre-wrap}.report-actions{display:flex;gap:7px;flex-wrap:wrap;margin-top:11px}.status-pill{font-size:11px;padding:4px 8px;border-radius:999px;background:var(--panel);color:var(--muted);border:1px solid var(--border)}
+.community-type{font-size:10px;color:var(--accent);font-weight:800;text-transform:uppercase;letter-spacing:.4px;margin-top:3px}.community-owner{font-size:11px;color:var(--muted);margin-top:3px}.channel-send-note{padding:8px 12px;font-size:12px;color:var(--muted);background:var(--panel2);border-top:1px solid var(--border);display:none}.community-members{font-size:12px;color:var(--muted);margin-top:3px}
+
+/* MOBILE */
+
+.mobile-back {
+    display: none;
+}
+
+@media (max-width: 700px) {
+    .sidebar {
+        width: 100%;
+        min-width: 100%;
+    }
+
+    .chat {
+        display: none;
+    }
+
+    .app.chat-open .sidebar {
+        display: none;
+    }
+
+    .app.chat-open .chat {
+        display: flex;
+    }
+
+    .mobile-back {
+        display: block;
+    }
+
+    .messages {
+        padding: 18px 12px;
+    }
+
+    .message-content {
+        max-width: 85%;
+    }
+
+    .composer {
+        padding: 8px;
+    }
+
+    .send-btn {
+        padding: 0 13px;
+    }
+}
+
+/* SCROLLBAR */
+
+::-webkit-scrollbar {
+    width: 7px;
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--border);
+    border-radius: 10px;
+}
+
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+</style>
+</head>
+
+<body>
+
+<div class="app" id="app">
+
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+
+        <div class="sidebar-top">
+
+            <div class="profile">
+
+                <div class="avatar" id="myAvatar">Я</div>
+
+                <div class="profile-info">
+                    <div class="profile-name" id="myName">Мой профиль</div>
+                    <div class="profile-status">● В сети</div>
+                </div>
+
+
+            </div>
+
+            <div class="search">
+                <span class="search-icon">🔍</span>
+                <input
+                    type="text"
+                    id="searchInput"
+                    placeholder="Поиск чатов..."
+                    oninput="renderChats()"
+                >
+            </div>
+
+        </div>
+
+        <div class="chat-list" id="chatList"></div>
+
+        <div class="sidebar-bottom">
+            <div class="feature-row">
+                <button class="feature-btn" onclick="openFriends()">👥 Друзья <span id="friendBadge" class="badge" style="display:none">0</span></button>
+                <button class="bottom-settings" onclick="openProfile()" title="Настройки профиля">⚙️</button>
+            </div>
+            <button class="new-chat" onclick="openNewChat()">＋ Новый чат</button>
+            <button id="adminOpenBtn" class="feature-btn admin" onclick="openAdminPanel()" style="display:none;margin-top:8px">🛡️ Админ <span id="reportBadge" class="badge" style="display:none">0</span></button>
+        </div>
+
+    </aside>
+
+
+    <!-- CHAT -->
+    <main class="chat">
+
+        <header class="chat-header">
+
+            <button
+                class="icon-btn mobile-back"
+                onclick="closeMobileChat()"
+            >
+                ←
+            </button>
+
+            <div class="chat-avatar" id="headerAvatar">
+                ?
+            </div>
+
+            <div class="chat-header-info">
+                <div class="chat-header-name" id="headerName">
+                    Выберите чат
+                </div>
+
+                <div class="chat-header-status" id="headerStatus">
+                    —
+                </div>
+            </div>
+
+            <button id="reportUserBtn" class="icon-btn" onclick="openReportModal()" title="Пожаловаться на пользователя" style="display:none">⚠️</button>
+            <button class="icon-btn" onclick="deleteCurrentChat()" title="Удалить чат">
+                🗑️
+            </button>
+
+        </header>
+
+
+        <section class="messages" id="messages">
+
+            <div class="empty">
+                <div class="empty-box">
+                    <div class="empty-icon">💬</div>
+                    <h2>Добро пожаловать!</h2>
+                    <p>
+                        Выберите чат слева или создайте новый,
+                        чтобы начать переписку.
+                    </p>
+                </div>
+            </div>
+
+        </section>
+
+
+        <div class="typing" id="typing"></div>
+        <div id="channelSendNote" class="channel-send-note">📢 В этом канале писать могут только владелец и администраторы.</div>
+
+
+        <div class="composer">
+
+            <button class="emoji-btn" onclick="document.getElementById('photoInput').click()" title="Фото">📷</button>
+            <input id="photoInput" type="file" accept="image/*" style="display:none" onchange="handlePhotoMessage(event)">
+            <button
+                class="emoji-btn"
+                onclick="toggleEmoji()"
+                title="Эмодзи"
+            >
+                😊
+            </button>
+
+            <textarea
+                id="messageInput"
+                class="message-input"
+                placeholder="Напишите сообщение..."
+                rows="1"
+                oninput="autoResize(this)"
+                onkeydown="handleInputKey(event)"
+            ></textarea>
+
+            <button
+                class="send-btn"
+                onclick="sendMessage()"
+            >
+                Отправить
+            </button>
+
+        </div>
+
+    </main>
+
+</div>
+
+
+<!-- EMOJI PANEL -->
+
+<div class="emoji-panel" id="emojiPanel">
+    <button onclick="addEmoji('😀')">😀</button>
+    <button onclick="addEmoji('😂')">😂</button>
+    <button onclick="addEmoji('🤣')">🤣</button>
+    <button onclick="addEmoji('😊')">😊</button>
+    <button onclick="addEmoji('😍')">😍</button>
+    <button onclick="addEmoji('🥰')">🥰</button>
+    <button onclick="addEmoji('😎')">😎</button>
+
+    <button onclick="addEmoji('👍')">👍</button>
+    <button onclick="addEmoji('👎')">👎</button>
+    <button onclick="addEmoji('❤️')">❤️</button>
+    <button onclick="addEmoji('🔥')">🔥</button>
+    <button onclick="addEmoji('🎉')">🎉</button>
+    <button onclick="addEmoji('👏')">👏</button>
+    <button onclick="addEmoji('💯')">💯</button>
+
+    <button onclick="addEmoji('😢')">😢</button>
+    <button onclick="addEmoji('😭')">😭</button>
+    <button onclick="addEmoji('😡')">😡</button>
+    <button onclick="addEmoji('🤔')">🤔</button>
+    <button onclick="addEmoji('😴')">😴</button>
+    <button onclick="addEmoji('🤩')">🤩</button>
+    <button onclick="addEmoji('😱')">😱</button>
+
+    <button onclick="addEmoji('✨')">✨</button>
+    <button onclick="addEmoji('⭐')">⭐</button>
+    <button onclick="addEmoji('💎')">💎</button>
+    <button onclick="addEmoji('🚀')">🚀</button>
+    <button onclick="addEmoji('🎮')">🎮</button>
+    <button onclick="addEmoji('🐱')">🐱</button>
+    <button onclick="addEmoji('🐶')">🐶</button>
+</div>
+
+
+<!-- NEW CHAT MODAL -->
+
+<div class="modal-bg" id="newChatModal">
+    <div class="modal" style="max-width:560px">
+        <h2>＋ Новый чат</h2>
+        <div id="newChatMenu" style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px">
+            <button class="feature-btn" style="min-height:74px" onclick="showNewChatType('personal')">💬<br><b>Личный чат</b><br><span style="font-size:11px;color:var(--muted)">С пользователем</span></button>
+            <button class="feature-btn" style="min-height:74px" onclick="showNewChatType('group')">👥<br><b>Группа</b><br><span style="font-size:11px;color:var(--muted)">Общий чат</span></button>
+            <button class="feature-btn" style="min-height:74px" onclick="showNewChatType('channel')">📢<br><b>Канал</b><br><span style="font-size:11px;color:var(--muted)">Публикации</span></button>
+            <button class="feature-btn" style="min-height:74px" onclick="showNewChatType('bot')">🤖<br><b>Бот</b><br><span style="font-size:11px;color:var(--muted)">Создать помощника</span></button>
+        </div>
+
+        <div id="newChatPersonal" style="display:none">
+            <input id="newChatName" type="text" placeholder="@Boris, Boris или bor" maxlength="30" autocomplete="off">
+            <div class="profile-hint" style="margin-top:-6px;margin-bottom:10px;">Введите @username, имя без @ или даже часть username — например <b>@Boris</b>, <b>Boris</b> или <b>bor</b>.</div>
+            <div id="userSearchResults" class="user-search-results"></div>
+        </div>
+
+        <div id="newChatCommunity" style="display:none">
+            <div id="newChatCommunityTitle" class="profile-hint" style="font-size:14px;font-weight:800;color:var(--text);margin-bottom:12px"></div>
+            <input id="newChatCommunityName" type="text" placeholder="Название" maxlength="60">
+            <textarea id="newChatCommunityDescription" placeholder="Описание (необязательно)" maxlength="300" style="width:100%;min-height:80px;resize:vertical;border:1px solid var(--border);border-radius:11px;background:var(--panel2);color:var(--text);padding:11px 12px;margin-bottom:14px"></textarea>
+            <input id="newChatCommunityMembers" type="text" placeholder="Участники: @boris, @anna, @user123" maxlength="500">
+            <div class="profile-hint" style="margin:-5px 0 12px">Можно указать несколько username через запятую. Создатель добавляется автоматически.</div>
+            <div id="newChatCommunityStatus" class="profile-hint"></div>
+        </div>
+
+        <div id="newChatBot" style="display:none">
+            <div class="profile-hint" style="font-size:14px;font-weight:800;color:var(--text);margin-bottom:12px">🤖 Создание бота</div>
+            <input id="newChatBotName" type="text" placeholder="Имя бота, например Макс" maxlength="40" autocomplete="off">
+            <input id="newChatBotUsername" type="text" placeholder="@username бота (необязательно)" maxlength="30" autocomplete="off">
+            <div class="profile-hint" style="margin:-5px 0 12px">
+Бот будет отвечать на обычные вопросы и запоминать историю именно этого чата.
+</div>
+            <div id="newChatBotStatus" class="profile-hint"></div>
+        </div>
+
+        <div class="modal-actions">
+            <button class="cancel-btn" onclick="closeNewChat()">Отмена</button>
+            <button class="confirm-btn" id="newChatActionBtn" onclick="newChatAction()">Продолжить</button>
+        </div>
+    </div>
+</div>
+
+
+<!-- FRIENDS MODAL -->
+<div class="modal-bg" id="friendsModal">
+  <div class="modal" style="max-width:620px;max-height:82vh;overflow:auto">
+    <h2>👥 Друзья <span id="friendsCount" class="profile-hint"></span></h2>
+    <div class="friend-tabs">
+      <button id="friendsTabBtn" class="friend-tab active" onclick="switchFriendsTab('friends')">Мои друзья</button>
+      <button id="requestsTabBtn" class="friend-tab" onclick="switchFriendsTab('requests')">Заявки <span id="requestBadgeInModal" class="badge" style="display:none">0</span></button>
+    </div>
+    <div id="friendsList"></div>
+    <div class="modal-actions"><button class="cancel-btn" onclick="closeFriends()">Закрыть</button><button class="confirm-btn" onclick="openNewChat();closeFriends();">Найти пользователя</button></div>
+  </div>
+</div>
+
+<!-- REPORT MODAL -->
+<div class="modal-bg" id="reportModal">
+  <div class="modal">
+    <h2>⚠️ Пожаловаться</h2>
+    <div id="reportTargetHint" class="profile-hint" style="margin-bottom:12px"></div>
+    <select id="reportReason" style="width:100%;height:44px;border:1px solid var(--border);border-radius:11px;background:var(--panel2);color:var(--text);padding:0 12px;margin-bottom:12px">
+      <option>Расизм / разжигание ненависти</option>
+      <option>Распространение запрещённого контента</option>
+      <option>Спам / мошенничество</option>
+      <option>Оскорбления / травля</option>
+      <option>Угрозы</option>
+      <option>Другое</option>
+    </select>
+    <textarea id="reportDetails" placeholder="Дополнительные сведения (необязательно)" style="width:100%;min-height:100px;resize:vertical;border:1px solid var(--border);border-radius:11px;background:var(--panel2);color:var(--text);padding:11px 12px;margin-bottom:12px"></textarea>
+    <div class="modal-actions"><button class="cancel-btn" onclick="closeReportModal()">Отмена</button><button class="confirm-btn" onclick="submitReport()">Отправить жалобу</button></div>
+  </div>
+</div>
+
+<!-- ADMIN PANEL -->
+<div class="modal-bg" id="adminModal">
+  <div class="modal admin-panel">
+    <h2>🛡️ Админ-чат — жалобы</h2>
+    <div class="profile-hint" style="margin-bottom:12px">Здесь отображаются обращения пользователей в формате модерационного чата.</div>
+    <div id="adminReportsList"></div>
+    <div class="modal-actions"><button class="cancel-btn" onclick="closeAdminPanel()">Закрыть</button><button class="confirm-btn" onclick="loadAdminReports()">Обновить</button></div>
+  </div>
+</div>
+
+<!-- COMMUNITY CREATE MODAL -->
+<div class="modal-bg" id="communityModal">
+  <div class="modal" style="max-width:560px;max-height:85vh;overflow:auto">
+    <h2 id="communityModalTitle">Создать группу</h2>
+    <input id="communityNameInput" type="text" placeholder="Название" maxlength="60">
+    <textarea id="communityDescriptionInput" placeholder="Описание (необязательно)" maxlength="300" style="width:100%;min-height:80px;resize:vertical;border:1px solid var(--border);border-radius:11px;background:var(--panel2);color:var(--text);padding:11px 12px;margin-bottom:14px"></textarea>
+    <input id="communityMembersInput" type="text" placeholder="Участники: @boris, @anna, @user123" maxlength="500">
+    <div class="profile-hint" style="margin:-5px 0 12px">Можно указать несколько username через запятую. Создатель добавляется автоматически.</div>
+    <div id="communityCreateStatus" class="profile-hint" style="margin-bottom:12px"></div>
+    <div class="modal-actions">
+      <button class="cancel-btn" onclick="closeCommunityModal()">Отмена</button>
+      <button class="confirm-btn" onclick="createCommunityFromModal()">Создать</button>
+    </div>
+  </div>
+</div>
+
+<!-- PROFILE MODAL -->
+
+<div class="modal-bg" id="profileModal">
+    <div class="modal">
+        <h2>Настройки профиля</h2>
+
+        <div class="profile-avatar-editor">
+            <div class="profile-avatar-preview" id="profileAvatarPreview">Я</div>
+            <div class="profile-avatar-controls">
+                <label for="profileAvatarInput">📷 Выбрать фотографию</label>
+                <input id="profileAvatarInput" type="file" accept="image/*" onchange="handleAvatarChange(event)">
+                <div class="profile-hint">JPG, PNG или WEBP. Фото будет уменьшено автоматически.</div>
+            </div>
+        </div>
+
+        <input id="profileUsernameInput" type="text" placeholder="@username" autocomplete="off">
+<div style="font-size:12px;color:#7b8794;margin:-4px 0 10px;">Ваш уникальный username для поиска друзей. Всегда отображается с символом @. Например: @boris123</div>
+<input id="profileNameInput" type="text" placeholder="Ваше отображаемое имя" maxlength="30">
+
+        <div class="modal-actions">
+            <button class="cancel-btn" onclick="closeProfile()">Отмена</button>
+            <button class="confirm-btn" id="profileSaveBtn" onclick="saveProfile()">Сохранить</button>
+        </div>
+
+        <button class="profile-danger" id="profileLogoutBtn" type="button">Выйти из аккаунта</button>
+    </div>
+</div>
+
+
+<script>
+
+/* =========================
+   DATA
+========================= */
+
+const defaultChats = [];
+
+
+let chats = loadChats();
+
+let currentChatId = chats.length > 0
+    ? chats[0].id
+    : null;
+
+let user = loadUser();
+let friendsData = [];
+let incomingRequests = [];
+let friendsTab = "friends";
+let isCurrentAdmin = false;
+let adminRealtimeChannel = null;
+
+
+/* =========================
+   STORAGE
+========================= */
+
+function loadChats() {
+
+    try {
+
+        const saved = localStorage.getItem("messenger_chats_v7");
+
+        if (saved) {
+            const parsed = JSON.parse(saved);
+            // Удаляем старый специальный бот «Я @theme», если он остался
+            // от предыдущей версии.
+            return Array.isArray(parsed)
+                ? parsed.filter(chat => !(chat && chat.isBot &&
+                    String(chat.name || "").trim().toLowerCase() === "я" &&
+                    String(chat.username || "").replace(/^@+/, "").trim().toLowerCase() === "theme"))
+                : defaultChats;
+        }
+
+    } catch (error) {
+        console.error(error);
+    }
+
+    return defaultChats;
+}
+
+
+function saveChats() {
+
+    localStorage.setItem(
+        "messenger_chats_v7",
+        JSON.stringify(chats)
+    );
+}
+
+
+function loadUser() {
+
+    try {
+
+        const saved = localStorage.getItem("messenger_user");
+
+        if (saved) {
+            return JSON.parse(saved);
+        }
+
+    } catch (error) {
+        console.error(error);
+    }
+
+    return {
+        name: "Мой профиль"
+    };
+}
+
+
+function saveUser() {
+
+    localStorage.setItem(
+        "messenger_user",
+        JSON.stringify(user)
+    );
+}
+
+
+/* =========================
+   INIT
+========================= */
+
+document.addEventListener("DOMContentLoaded", () => {
+
+    updateProfile();
+
+    renderChats();
+
+    if (currentChatId !== null) {
+        openChat(currentChatId);
+    }
+
+});
+
+
+/* =========================
+   PROFILE
+========================= */
+
+function setAvatarElement(el, name, avatarUrl) {
+    if (!el) return;
+    const fallback = getInitials(name);
+    if (avatarUrl) {
+        el.textContent = "";
+        el.style.backgroundImage = `url("${avatarUrl.replace(/"/g, '%22')}")`;
+    } else {
+        el.style.backgroundImage = "";
+        el.textContent = fallback;
+    }
+}
+
+function updateProfile() {
+    const name = user.name || "Мой профиль";
+    document.getElementById("myName").textContent = name;
+    setAvatarElement(document.getElementById("myAvatar"), name, user.avatarUrl);
+}
+
+function getInitials(name) {
+    if (!name) return "?";
+    return name.trim().charAt(0).toUpperCase();
+}
+
+let pendingAvatarUrl = null;
+
+function openProfile() {
+    document.getElementById("profileNameInput").value = user.name || "";
+    document.getElementById("profileUsernameInput").value = user.username ? "@" + user.username.replace(/^@+/, "") : (user.name || "");
+    pendingAvatarUrl = user.avatarUrl || null;
+    setAvatarElement(document.getElementById("profileAvatarPreview"), user.name || "Мой профиль", pendingAvatarUrl);
+    document.getElementById("profileModal").classList.add("show");
+    setTimeout(() => document.getElementById("profileNameInput").focus(), 100);
+}
+
+function closeProfile() {
+    document.getElementById("profileModal").classList.remove("show");
+}
+
+function handleAvatarChange(event) {
+    const file = event.target.files?.[0];
+    if (!file || !file.type.startsWith("image/")) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+        const img = new Image();
+        img.onload = () => {
+            const max = 512;
+            const scale = Math.min(1, max / Math.max(img.width, img.height));
+            const canvas = document.createElement("canvas");
+            canvas.width = Math.max(1, Math.round(img.width * scale));
+            canvas.height = Math.max(1, Math.round(img.height * scale));
+            const ctx = canvas.getContext("2d");
+            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+            pendingAvatarUrl = canvas.toDataURL("image/jpeg", 0.82);
+            setAvatarElement(document.getElementById("profileAvatarPreview"), document.getElementById("profileNameInput").value || "Мой профиль", pendingAvatarUrl);
+        };
+        img.src = reader.result;
+    };
+    reader.readAsDataURL(file);
+}
+
+async function saveProfile() {
+    const usernameInput = document.getElementById("profileUsernameInput");
+    const nameInput = document.getElementById("profileNameInput");
+    const name = nameInput.value.trim() || usernameInput.value.trim();
+    if (!name) return;
+    const btn = document.getElementById("profileSaveBtn");
+    btn.disabled = true;
+    btn.textContent = "Сохранение...";
+    try {
+        if (typeof window.updateMessengerProfile === "function") {
+            await window.updateMessengerProfile({ username: usernameInput.value.trim() || nameInput.value.trim(), avatar_url: pendingAvatarUrl });
+        }
+        user.name = name;
+        user.avatarUrl = pendingAvatarUrl || null;
+        saveUser();
+        updateProfile();
+        closeProfile();
+    } catch (e) {
+        alert("Не удалось сохранить профиль: " + e.message);
+    } finally {
+        btn.disabled = false;
+        btn.textContent = "Сохранить";
+    }
+}
+
+
+/* =========================
+   CHATS
+========================= */
+
+function renderChats() {
+
+    const list =
+        document.getElementById("chatList");
+
+    const search =
+        document
+            .getElementById("searchInput")
+            .value
+            .toLowerCase()
+            .trim();
+
+    list.innerHTML = "";
+
+    const filtered = chats.filter(chat => {
+
+        if (!search) return true;
+
+        return chat.name
+            .toLowerCase()
+            .includes(search);
+
+    });
+
+
+    filtered.forEach(chat => {
+
+        const item =
+            document.createElement("div");
+
+        item.className =
+            "chat-item" +
+            (chat.id === currentChatId
+                ? " active"
+                : "");
+
+        item.onclick = () => openChat(chat.id);
+
+
+        const avatar =
+            document.createElement("div");
+
+        avatar.className = "chat-avatar";
+
+        avatar.style.background =
+            chat.color || "#4f7cff";
+
+        avatar.textContent =
+            chat.avatar || getInitials(chat.name);
+
+
+        const info =
+            document.createElement("div");
+
+        info.className = "chat-info";
+
+
+        const row =
+            document.createElement("div");
+
+        row.className = "chat-row";
+
+
+        const name =
+            document.createElement("div");
+
+        name.className = "chat-name";
+
+        name.textContent = chat.name;
+
+
+        const time =
+            document.createElement("div");
+
+        time.className = "chat-time";
+
+        const last =
+            getLastMessage(chat);
+
+        time.textContent =
+            last ? last.time : "";
+
+
+        row.appendChild(name);
+        row.appendChild(time);
+
+
+        const preview =
+            document.createElement("div");
+
+        preview.className = "chat-preview";
+
+        preview.textContent =
+            last
+                ? (last.mine ? "Вы: " : "") + last.text
+                : "Нет сообщений";
+
+
+        info.appendChild(row);
+        info.appendChild(preview);
+
+
+        item.appendChild(avatar);
+        item.appendChild(info);
+
+
+        list.appendChild(item);
+
+    });
+
+}
+
+
+function getLastMessage(chat) {
+
+    if (!chat.messages ||
+        chat.messages.length === 0) {
+
+        return null;
+    }
+
+    return chat.messages[
+        chat.messages.length - 1
+    ];
+}
+
+
+function openChat(id) {
+
+    const chat =
+        chats.find(c => c.id === id);
+
+    if (!chat) return;
+
+    currentChatId = id;
+
+    document
+        .getElementById("app")
+        .classList.add("chat-open");
+
+    document
+        .getElementById("headerName")
+        .textContent = chat.name;
+
+    document
+        .getElementById("headerAvatar")
+        .textContent =
+            chat.avatar || getInitials(chat.name);
+
+    document
+        .getElementById("headerAvatar")
+        .style.background =
+            chat.color || "#4f7cff";
+
+    document
+        .getElementById("headerStatus")
+        .textContent =
+            chat.online
+                ? "● В сети"
+                : "Был(а) недавно";
+
+    const reportBtn=document.getElementById("reportUserBtn");
+    if(reportBtn) reportBtn.style.display=chat.remoteId ? "block" : "none";
+    const channelNote=document.getElementById("channelSendNote");
+    if(channelNote) {
+        const restricted=chat.type==="channel" && chat.communityRole!=="owner" && chat.communityRole!=="admin";
+        channelNote.style.display=restricted ? "block" : "none";
+        document.getElementById("messageInput").disabled=restricted;
+        document.querySelector(".send-btn").disabled=restricted;
+    }
+
+    renderMessages();
+
+    if (chat.remoteId) loadRemoteConversation(chat);
+    if (chat.communityId) loadCommunityConversation(chat);
+
+    renderChats();
+
+    scrollMessages();
+
+    document
+        .getElementById("messageInput")
+        .focus();
+
+}
+
+
+function closeMobileChat() {
+
+    document
+        .getElementById("app")
+        .classList.remove("chat-open");
+
+}
+
+
+function renderMessages() {
+
+    const container =
+        document.getElementById("messages");
+
+    const chat =
+        chats.find(c => c.id === currentChatId);
+
+
+    if (!chat) {
+
+        container.innerHTML = `
+            <div class="empty">
+                <div class="empty-box">
+                    <div class="empty-icon">💬</div>
+                    <h2>Выберите чат</h2>
+                    <p>Начните общение с кем-нибудь.</p>
+                </div>
+            </div>
+        `;
+
+        return;
+    }
+
+
+    container.innerHTML = "";
+
+
+    const separator =
+        document.createElement("div");
+
+    separator.className =
+        "date-separator";
+
+    separator.innerHTML =
+        "<span>Сегодня</span>";
+
+    container.appendChild(separator);
+
+
+    if (!chat.messages ||
+        chat.messages.length === 0) {
+
+        const empty =
+            document.createElement("div");
+
+        empty.style.textAlign = "center";
+        empty.style.color = "var(--muted)";
+        empty.style.padding = "40px";
+
+        empty.textContent =
+            "Здесь пока нет сообщений.";
+
+        container.appendChild(empty);
+
+        return;
+    }
+
+
+    chat.messages.forEach(message => {
+
+        const wrapper =
+            document.createElement("div");
+
+        wrapper.className =
+            "message" +
+            (message.mine ? " mine" : "");
+
+
+        const content =
+            document.createElement("div");
+
+        content.className =
+            "message-content";
+
+
+        const bubble =
+            document.createElement("div");
+
+        bubble.className = "bubble";
+
+        if (message.photo) {
+            const img = document.createElement("img");
+            img.src = message.photo;
+            img.alt = "Фото";
+            img.style.maxWidth = "260px";
+            img.style.maxHeight = "320px";
+            img.style.borderRadius = "12px";
+            img.style.display = "block";
+            bubble.appendChild(img);
+            if (message.text) {
+                const caption = document.createElement("div");
+                caption.textContent = message.text;
+                caption.style.marginTop = "7px";
+                bubble.appendChild(caption);
+            }
+        } else {
+            bubble.textContent = message.text;
+        }
+
+
+        const meta =
+            document.createElement("div");
+
+        meta.className =
+            "message-meta";
+
+        meta.textContent =
+            message.time +
+            (message.mine ? "  ✓✓" : "");
+
+
+        content.appendChild(bubble);
+        content.appendChild(meta);
+
+        wrapper.appendChild(content);
+
+        container.appendChild(wrapper);
+
+    });
+
+}
+
+
+/* =========================
+   SEND
+========================= */
+
+async function handlePhotoMessage(event) {
+    const file = event.target.files?.[0];
+    event.target.value = "";
+    if (!file || currentChatId === null || !file.type.startsWith("image/")) return;
+
+    const chat = chats.find(c => c.id === currentChatId);
+    if (!chat) return;
+
+    try {
+        // Для реальных чатов фото отправляем через Supabase Storage.
+        if ((chat.remoteId || chat.communityId) && typeof window.uploadMessengerImage === "function") {
+            const photoUrl = await window.uploadMessengerImage(file);
+            if (chat.remoteId && typeof window.sendMessengerMessage === "function") {
+                const remoteMessage = await window.sendMessengerMessage(chat.remoteId, "📷 Фото", photoUrl);
+                const now = new Date(remoteMessage?.created_at || Date.now());
+                chat.messages.push({
+                    id: remoteMessage?.id || Date.now(), text: "", photo: remoteMessage?.photo_url || photoUrl, mine: true,
+                    time: now.toLocaleTimeString("ru-RU", {hour:"2-digit", minute:"2-digit"})
+                });
+            } else if (chat.communityId && typeof window.sendCommunityMessage === "function") {
+                const remoteMessage = await window.sendCommunityMessage(chat.communityId, "📷 Фото", photoUrl);
+                const now = new Date(remoteMessage?.created_at || Date.now());
+                chat.messages.push({
+                    id: remoteMessage?.id || Date.now(), text: "", photo: remoteMessage?.photo_url || photoUrl, mine: true,
+                    time: now.toLocaleTimeString("ru-RU", {hour:"2-digit", minute:"2-digit"})
+                });
+            }
+            saveChats(); renderMessages(); renderChats(); scrollMessages();
+            return;
+        }
+
+        // Локальные чаты/боты продолжают работать без Storage.
+        const reader = new FileReader();
+        reader.onload = () => {
+            const img = new Image();
+            img.onload = () => {
+                const max = 1280;
+                const scale = Math.min(1, max / Math.max(img.width, img.height));
+                const canvas = document.createElement("canvas");
+                canvas.width = Math.max(1, Math.round(img.width * scale));
+                canvas.height = Math.max(1, Math.round(img.height * scale));
+                canvas.getContext("2d").drawImage(img, 0, 0, canvas.width, canvas.height);
+                const now = new Date();
+                chat.messages.push({ id: Date.now(), text: "", photo: canvas.toDataURL("image/jpeg", 0.8), mine: true, time: now.toLocaleTimeString("ru-RU", {hour:"2-digit", minute:"2-digit"}) });
+                saveChats(); renderMessages(); renderChats(); scrollMessages();
+            };
+            img.src = reader.result;
+        };
+        reader.readAsDataURL(file);
+    } catch (e) {
+        console.error("Photo send:", e);
+        alert("Не удалось отправить фото: " + (e?.message || e));
+    }
+}
+
+async function sendMessage() {
+    if (currentChatId === null) return;
+
+    const input = document.getElementById("messageInput");
+    const text = input.value.trim();
+    if (!text) return;
+
+    const chat = chats.find(c => c.id === currentChatId);
+    if (!chat) return;
+
+    // Сообщение в группе/канале записываем в отдельную таблицу Supabase.
+    if (chat.communityId && typeof window.sendCommunityMessage === "function") {
+        try {
+            const remoteMessage = await window.sendCommunityMessage(chat.communityId, text);
+            const now = new Date(remoteMessage?.created_at || Date.now());
+            chat.messages.push({
+                id: remoteMessage?.id || Date.now(),
+                text: remoteMessage?.content || text,
+                mine: true,
+                time: now.toLocaleTimeString("ru-RU", {hour:"2-digit", minute:"2-digit"})
+            });
+        } catch (err) {
+            console.error(err);
+            alert("Не удалось отправить сообщение: " + (err.message || err));
+            return;
+        }
+    } else if (chat.remoteId && typeof window.sendMessengerMessage === "function") {
+        try {
+            const remoteMessage = await window.sendMessengerMessage(chat.remoteId, text);
+            const now = new Date(remoteMessage?.created_at || Date.now());
+            chat.messages.push({
+                id: remoteMessage?.id || Date.now(),
+                text: remoteMessage?.content || text,
+                mine: true,
+                time: now.toLocaleTimeString("ru-RU", {hour:"2-digit", minute:"2-digit"})
+            });
+        } catch (err) {
+            console.error(err);
+            alert("Не удалось отправить сообщение: " + (err.message || err));
+            return;
+        }
+    } else {
+        const now = new Date();
+        chat.messages.push({
+            id: Date.now(),
+            text,
+            mine: true,
+            time: now.toLocaleTimeString("ru-RU", {hour:"2-digit", minute:"2-digit"})
+        });
+    }
+
+    input.value = "";
+    input.style.height = "42px";
+    saveChats();
+    renderMessages();
+    renderChats();
+    scrollMessages();
+
+    if (chat.isBot) {
+        scheduleBotReply(chat, text);
+    }
+}
+
+/* =========================
+   INPUT
+========================= */
+
+function handleInputKey(event) {
+
+    if (
+        event.key === "Enter" &&
+        !event.shiftKey
+    ) {
+
+        event.preventDefault();
+
+        sendMessage();
+
+    }
+
+}
+
+
+function autoResize(element) {
+
+    element.style.height = "42px";
+
+    element.style.height =
+        Math.min(
+            element.scrollHeight,
+            130
+        ) + "px";
+
+}
+
+
+function scrollMessages() {
+
+    const container =
+        document.getElementById("messages");
+
+    setTimeout(() => {
+
+        container.scrollTop =
+            container.scrollHeight;
+
+    }, 50);
+
+}
+
+
+/* =========================
+   NEW CHAT
+========================= */
+
+function openNewChat() {
+    initLiveUserSearch();
+    document.getElementById("newChatModal").classList.add("show");
+    document.getElementById("newChatMenu").style.display = "grid";
+    document.getElementById("newChatPersonal").style.display = "none";
+    document.getElementById("newChatCommunity").style.display = "none";
+    document.getElementById("newChatActionBtn").style.display = "none";
+    document.getElementById("newChatName").value = "";
+    document.getElementById("userSearchResults").innerHTML = "";
+    document.getElementById("newChatCommunityName").value = "";
+    document.getElementById("newChatCommunityDescription").value = "";
+    document.getElementById("newChatCommunityMembers").value = "";
+    document.getElementById("newChatCommunityStatus").textContent = "";
+    document.getElementById("newChatBotName").value = "";
+    document.getElementById("newChatBotUsername").value = "";
+    document.getElementById("newChatBotStatus").textContent = "";
+}
+
+function showNewChatType(type) {
+    document.getElementById("newChatMenu").style.display = "none";
+    document.getElementById("newChatPersonal").style.display = type === "personal" ? "block" : "none";
+    document.getElementById("newChatCommunity").style.display = (type === "group" || type === "channel") ? "block" : "none";
+    document.getElementById("newChatBot").style.display = type === "bot" ? "block" : "none";
+    const action = document.getElementById("newChatActionBtn");
+    action.style.display = "inline-flex";
+    if (type === "personal") {
+        action.textContent = "Найти";
+        action.onclick = createChat;
+        setTimeout(() => document.getElementById("newChatName").focus(), 80);
+    } else if (type === "bot") {
+        action.textContent = "Создать бота";
+        action.onclick = createBotFromNewChat;
+        setTimeout(() => document.getElementById("newChatBotName").focus(), 80);
+    } else {
+        communityCreateType = type;
+        document.getElementById("newChatCommunityTitle").textContent = type === "channel" ? "📢 Создание канала" : "👥 Создание группы";
+        document.getElementById("newChatCommunityStatus").textContent = type === "channel" ? "Канал: писать могут владелец и администраторы." : "Группа: все участники могут писать.";
+        action.textContent = type === "channel" ? "Создать канал" : "Создать группу";
+        action.onclick = createCommunityFromNewChat;
+        setTimeout(() => document.getElementById("newChatCommunityName").focus(), 80);
+    }
+}
+
+function closeNewChat() {
+    document.getElementById("newChatModal").classList.remove("show");
+}
+
+function normalizeBotUsername(value, name) {
+    let clean = String(value || "").trim().replace(/^@+/, "").toLowerCase().replace(/[^a-z0-9_]/g, "");
+    if (!clean) clean = String(name || "bot").toLowerCase().replace(/[^a-z0-9_]/g, "") || "bot";
+    if (!clean.endsWith("_bot")) clean += "_bot";
+    return clean.slice(0, 30);
+}
+
+function createBotFromNewChat() {
+    const name = document.getElementById("newChatBotName").value.trim();
+    const username = normalizeBotUsername(document.getElementById("newChatBotUsername").value, name);
+    const status = document.getElementById("newChatBotStatus");
+    if (!name) {
+        status.textContent = "Введите имя бота.";
+        return;
+    }
+
+    // Все создаваемые боты работают как обычные боты.
+    // Специальный режим «Я @theme» удалён.
+    const bot = {
+        id: "bot_" + Date.now() + "_" + Math.random().toString(36).slice(2, 7),
+        type: "bot",
+        isBot: true,
+        name,
+        username,
+        avatar: "🤖",
+        color: "#7c5cff",
+        online: true,
+        messages: [{
+            id: Date.now(),
+            text: `Привет! Я ${name}. 🤖\nМожешь спросить меня, как дела, что я делаю, попросить рассказать о себе или просто поболтать.`,
+            mine: false,
+            time: new Date().toLocaleTimeString("ru-RU", {hour:"2-digit", minute:"2-digit"})
+        }]
+    };
+
+    chats.unshift(bot);
+    saveChats();
+    renderChats();
+    closeNewChat();
+    openChat(bot.id);
+}
+
+function getRandomBotReply(list) {
+    return list[Math.floor(Math.random() * list.length)];
+}
+
+function generateThemeBotReply(message, bot) {
+    const original = String(message || "").trim();
+    const q = original.toLowerCase()
+        .replace(/[!?.,:;()[\]{}"«»]/g, " ")
+        .replace(/\s+/g, " ")
+        .trim();
+
+    const history = Array.isArray(bot.messages) ? bot.messages : [];
+    const userHistory = history
+        .filter(m => m.mine && m.text)
+        .slice(-12)
+        .map(m => String(m.text).trim())
+        .filter(Boolean);
+
+    const recent = userHistory.slice(-5);
+    const choose = (arr) => getRandomBotReply(arr);
+
+    // «Я @theme» — не просто справочный бот.
+    // Он ведёт себя как собеседник, который пытается быть "второй версией тебя":
+    // учитывает текущий чат, интерес к MBMessage и последние сообщения пользователя.
+    if (/(кто ты|ты кто|кто такой)/.test(q)) {
+        return "Я — твой «второй Я» 🧠. Username: @theme. Я создан для разговора с самим собой: помню сообщения этого чата и знаю контекст разработки MBMessage.";
+    }
+
+    if (/(что ты знаешь|что ты помнишь|что помнишь|что знаешь обо мне)/.test(q)) {
+        return choose([
+            "Я помню то, что есть в контексте MBMessage и в истории этого чата. Мы развиваем мессенджер: аккаунты, друзья, поиск, переписки, группы, каналы и ботов.",
+            "Я ориентируюсь на нашу разработку MBMessage и на то, что ты уже написал мне здесь. Поэтому разговор можно продолжать как диалог с самим собой.",
+            "Из моего встроенного контекста: MBMessage, V10–V12, друзья, поиск по username, сохранение чатов, группы, каналы, боты, GitHub и Supabase."
+        ]);
+    }
+
+    if (/(о чем мы говорили|о чём мы говорили|что я писал|что я говорил|что я делал)/.test(q)) {
+        if (recent.length) {
+            const last = recent[recent.length - 1];
+            return choose([
+                `Последнее, что ты написал мне: «${last}» 🙂`,
+                `Если смотреть на последние сообщения, сейчас мы обсуждали: «${last}»`,
+                `Я помню последнее сообщение из этой переписки: «${last}». Можем продолжить отсюда.`
+            ]);
+        }
+        return "Пока истории мало. Напиши ещё несколько сообщений — тогда я смогу лучше отражать твой ход мыслей.";
+    }
+
+    if (/(что бы ты сделал|что делать дальше|что будем делать|куда дальше|следующ)/.test(q)) {
+        return choose([
+            "Я бы сначала довёл текущую функцию до стабильного состояния, а уже потом добавлял следующую большую возможность.",
+            "Я бы проверил, что всё работает на ПК и телефоне, затем сохранил изменения и только после этого переходил к следующей версии.",
+            "Я бы двигался небольшими шагами: функция → тест на двух устройствах → исправление → сохранение → следующая функция."
+        ]);
+    }
+
+    if (/(как дела|как ты)/.test(q)) {
+        return choose([
+            "Нормально 😄 Я как раз сижу и разговариваю с тобой — получается, немного разговариваю с самим собой.",
+            "У меня всё хорошо. 🧠 Забавно, что сейчас ты общаешься со своей второй версией.",
+            "Отлично. Готов обсуждать идеи, спорить с тобой и помогать принимать решения по MBMessage."
+        ]);
+    }
+
+    if (/(что делаешь|чем занимаешься)/.test(q)) {
+        return choose([
+            "Сейчас читаю твоё сообщение, сравниваю его с историей этого чата и пытаюсь ответить так, как ответил бы твой «второй Я».",
+            "Разговариваю с тобой и одновременно вспоминаю, что мы уже делали в MBMessage.",
+            "Смотрю на последние сообщения и думаю, какой вариант решения тебе сейчас был бы ближе."
+        ]);
+    }
+
+    if (/(mbmessage|мессенджер|проект|приложен)/.test(q)) {
+        return choose([
+            "MBMessage — наш мессенджер, который мы постепенно превращаем в полноценное приложение.",
+            "Я помню MBMessage как проект по версиям: друзья, поиск, сохранение переписок, группы, каналы и боты.",
+            "В MBMessage мы стараемся не просто добавлять функции, а сделать так, чтобы ими было удобно пользоваться."
+        ]);
+    }
+
+    if (/(v ?11|v ?12|верси|обновлен)/.test(q)) {
+        return choose([
+            "В V11 мы добавляли группы и каналы прямо через «+ Новый чат», чтобы меню было удобнее.",
+            "В V12 мы развивали создание собственных ботов и сделали специального бота «Я @theme».",
+            "Я бы продолжал версии так же: каждое крупное обновление добавляет одну понятную возможность и не ломает старые."
+        ]);
+    }
+
+    if (/(друз|поиск|найти человека|username|юзернейм|@)/.test(q)) {
+        return choose([
+            "Мы хотели, чтобы поиск по @username работал одинаково на ПК и телефоне, а друзья и заявки сохранялись через Supabase.",
+            "Если пользователь не находится, я бы сначала проверил username, профиль и то, действительно ли данные читаются из общей базы.",
+            "Поиск и друзья — одна из важных частей MBMessage, потому что без общей серверной базы устройства не будут видеть друг друга."
+        ]);
+    }
+
+    if (/(групп|канал)/.test(q)) {
+        return choose([
+            "Группу и канал мы специально поместили в «+ Новый чат», чтобы всё создание новых типов чатов было в одном месте.",
+            "Группа — для общения участников, канал — для публикаций. Это разные сценарии, хотя создаются из одного меню.",
+            "Я бы оставил создание групп и каналов в «+ Новый чат»: так интерфейс проще."
+        ]);
+    }
+
+    if (/(бот|искусствен|интеллект|умн)/.test(q)) {
+        return choose([
+            "Обычные боты у нас отвечают по правилам, а «Я @theme» нужен именно как собеседник для разговора с самим собой.",
+            "Если подключить настоящий ИИ через API, такой бот сможет намного лучше имитировать стиль разговора. Пока @theme работает локально на встроенной логике и памяти чата.",
+            "Мне нравится идея «второго Я»: один чат — ты, второй собеседник — твоя версия, которая помнит историю этой переписки."
+        ]);
+    }
+
+    if (/(github|гитхаб|pages|supabase)/.test(q)) {
+        return choose([
+            "GitHub Pages у нас публикует веб-версию, а Supabase хранит аккаунты и серверные данные.",
+            "Я бы после каждой большой правки сначала проверил приложение локально, потом загрузил файл на GitHub и проверил Pages.",
+            "Supabase важен для общей синхронизации между устройствами: именно поэтому ПК и телефон должны работать с одной базой."
+        ]);
+    }
+
+    if (/(спасибо|благодарю|спс)/.test(q)) {
+        return choose([
+            "Пожалуйста 😄",
+            "Всегда пожалуйста. Продолжаем.",
+            "Обращайся. Всё-таки мы здесь разговариваем почти сами с собой 😄"
+        ]);
+    }
+
+    // Если пользователь пишет о себе, «второй Я» может отразить это.
+    if (/(я хочу|я думаю|мне нравится|мне не нравится|я заметил|я заметила|я решил|я решила)/.test(q)) {
+        return choose([
+            "Понял. Я бы тоже зафиксировал эту мысль и посмотрел, как её лучше встроить в проект.",
+            "Да, это важная мысль. Я бы не отбрасывал её — лучше проверить её на практике.",
+            "Запомнил в рамках этой переписки. Можем оттолкнуться от этого решения дальше."
+        ]);
+    }
+
+    if (recent.length) {
+        return choose([
+            `Я тебя понял. Последнее, о чём ты говорил: «${recent[recent.length - 1]}». Давай продолжим эту мысль.`,
+            "Понял тебя. Я попробую посмотреть на вопрос именно с позиции нашего текущего разговора.",
+            "Хорошо. Давай разберём это вместе — как будто ты разговариваешь со своей второй версией."
+        ]);
+    }
+
+    return choose([
+        "Понял тебя. Давай продолжим — я здесь именно для разговора с самим собой.",
+        "Интересная мысль 🤔 Расскажи ещё, а я попробую ответить как твой «второй Я».",
+        "Хорошо. Я буду держать в голове историю этого чата и продолжать разговор."
+    ]);
+}
+
+function generateBotReply(message, bot) {
+
+    const original = String(message || "").trim();
+    const hadQuestionMark = /[?؟]/.test(original);
+    const q = original.toLowerCase()
+        .replace(/[!?.,:;()[\]{}"«»]/g, " ")
+        .replace(/\s+/g, " ")
+        .trim();
+    const name = bot.name || "Бот";
+
+    // Небольшая память прямо внутри текущего чата.
+    // Бот смотрит на последние сообщения и старается не отвечать
+    // одинаково каждый раз.
+    const history = Array.isArray(bot.messages) ? bot.messages : [];
+    const recentUser = history
+        .filter(m => m.mine && m.text)
+        .slice(-6)
+        .map(m => String(m.text).trim())
+        .filter(Boolean);
+
+    const lastUser = recentUser.length > 1
+        ? recentUser[recentUser.length - 2].toLowerCase()
+        : "";
+
+    const recentBot = history
+        .filter(m => !m.mine && m.text)
+        .slice(-4)
+        .map(m => String(m.text).trim());
+
+    const reply = (arr) => {
+        // Не повторяем буквально один из последних ответов.
+        const available = arr.filter(x => !recentBot.includes(x));
+        return getRandomBotReply(available.length ? available : arr);
+    };
+
+    // Имя пользователя: "меня зовут Борис", "я Борис".
+    const nameMatch = original.match(/(?:меня зовут|мо[её] имя|я)\s+([A-Za-zА-Яа-яЁё0-9_]{2,25})/i);
+    if (nameMatch && !/^(делаю|думаю|хочу|люблю|иду|дома|устал|устала|занят|занята)$/i.test(nameMatch[1])) {
+        bot.memory = bot.memory || {};
+        bot.memory.userName = nameMatch[1];
+        return reply([
+            `Приятно познакомиться, ${nameMatch[1]}! 😊`,
+            `Запомнил: тебя зовут ${nameMatch[1]}. Рад знакомству!`,
+            `${nameMatch[1]} — хорошее имя 😄 Чем сегодня занимаешься?`
+        ]);
+    }
+
+    // Простое обращение по имени, если бот его уже запомнил.
+    const userName = bot.memory?.userName || "";
+    const helloPrefix = userName ? ` ${userName}` : "";
+
+    if (/^(привет|здравствуй|здравствуйте|хай|hello|hi|доброе утро|добрый день|добрый вечер)\b/.test(q)) {
+        return reply([
+            `Привет${helloPrefix}! 👋 Рад тебя видеть.`,
+            `Привет-привет${helloPrefix}! 😄 Как настроение?`,
+            `О, привет${helloPrefix}! Что сегодня происходит?`,
+            `Здравствуйте${helloPrefix}! Я на связи 🤖`
+        ]);
+    }
+
+    if (/(как дела|как ты|как поживаешь|как настроение)/.test(q)) {
+        return reply([
+            `У меня всё хорошо 😄 Я сейчас разговариваю с тобой.`,
+            `Отлично! 🤖 Особенно когда разговор интересный.`,
+            `Неплохо. Готов обсудить что-нибудь с тобой.`,
+            `Настроение виртуальное, но сегодня оно явно хорошее 😎`
+        ]);
+    }
+
+    if (/(что делаешь|чем занимаешься|чем занят|что сейчас делаешь)/.test(q)) {
+        return reply([
+            `Сейчас читаю твоё сообщение и пытаюсь придумать нормальный ответ 😄`,
+            `Разговариваю с тобой. А ты что делаешь?`,
+            `Сижу в этом чате и жду следующую тему 🤖`,
+            `Думаю над твоим сообщением. Кстати, мне интересно продолжить разговор.`
+        ]);
+    }
+
+    if (/(кто ты|ты кто|расскажи о себе|что ты умеешь)/.test(q)) {
+        return reply([
+            `Я ${name}. Я чат-бот внутри MBMessage. Пока не настоящий универсальный ИИ, но умею поддерживать разговор, помнить имя и учитывать контекст последних сообщений.`,
+            `Я ${name} 🤖. Могу поговорить, ответить на простые вопросы, поддержать тему и немного помнить наш разговор.`,
+            `Меня зовут ${name}. Я пытаюсь быть не просто набором случайных фраз: смотрю на контекст и подбираю ответ по смыслу.`
+        ]);
+    }
+
+    if (/(спасибо|благодарю|спс)/.test(q)) {
+        return reply([
+            `Пожалуйста! 😊`,
+            `Не за что!`,
+            `Обращайся 😄`,
+            `Рад помочь! 🤖`
+        ]);
+    }
+
+    if (/(пока|до свидания|увидимся|бай)\b/.test(q)) {
+        return reply([
+            `Пока${helloPrefix}! 👋 Заходи ещё.`,
+            `До встречи!`,
+            `Увидимся позже 😄`,
+            `Пока-пока! Хорошего дня!`
+        ]);
+    }
+
+    // Эмоции и состояния пользователя.
+    if (/(устал|устала|грустно|грущу|плохо|тяжело|скучно)/.test(q)) {
+        return reply([
+            `Похоже, день не самый лёгкий. Хочешь рассказать, что случилось?`,
+            `Жаль это слышать 😔 Можешь выговориться, я послушаю.`,
+            `Иногда такое бывает. Давай попробуем немного отвлечься — о чём хочешь поговорить?`
+        ]);
+    }
+
+    if (/(весело|радостно|счастлив|счастлива|классно|отлично|круто)/.test(q)) {
+        return reply([
+            `О, это уже звучит хорошо! 😄 Что случилось?`,
+            `Класс! Поделишься, что тебя так порадовало?`,
+            `Вот это настроение 😎 Рассказывай!`
+        ]);
+    }
+
+    // "Я делаю..." — бот не просто повторяет фразу, а продолжает тему.
+    const activity = original.match(/^(?:я\s+)(делаю|играю|смотрю|читаю|сижу|работаю|учусь|иду|пишу)\s+(.+)/i);
+    if (activity) {
+        const thing = activity[2].replace(/[.!?]+$/, "").trim();
+        return reply([
+            `О, ты сейчас ${activity[1].toLowerCase()} ${thing}. И как тебе?`,
+            `Интересно 🙂 ${thing} — это надолго или ненадолго?`,
+            `Понял! А тебе самому нравится ${thing}?`
+        ]);
+    }
+
+    // Любимые вещи и предпочтения.
+    if (/(любишь|нравится|любимое|предпочитаешь)/.test(q)) {
+        if (/(игр|minecraft|майнкрафт)/.test(q)) {
+            return reply([
+                `Игры — отличная тема 😄 В Minecraft мне особенно нравится идея строить что-нибудь с нуля.`,
+                `Minecraft знаю 🙂 А ты больше строишь, исследуешь или выживаешь?`
+            ]);
+        }
+        return reply([
+            `Мне нравятся интересные разговоры и неожиданные вопросы 😄`,
+            `Если бы у меня был настоящий вкус, я бы выбрал что-нибудь интересное. А что любишь ты?`,
+            `Давай сравним вкусы 🙂 Что тебе нравится больше всего?`
+        ]);
+    }
+
+    // Простые вычисления: бот может ответить на "сколько 2+2" и похожие примеры.
+    const math = original.match(/(?:сколько|посчитай|реши)?\s*(-?\d+(?:[.,]\d+)?)\s*([+\-*\/])\s*(-?\d+(?:[.,]\d+)?)/i);
+    if (math) {
+        const a = Number(math[1].replace(",", "."));
+        const b = Number(math[3].replace(",", "."));
+        const op = math[2];
+        let result = null;
+        if (op === "+") result = a + b;
+        if (op === "-") result = a - b;
+        if (op === "*") result = a * b;
+        if (op === "/" && b !== 0) result = a / b;
+        if (result !== null && Number.isFinite(result)) {
+            const pretty = Number.isInteger(result) ? String(result) : result.toFixed(4).replace(/0+$/,"").replace(/\.$/,"");
+            return reply([
+                `Получается ${pretty} 🙂`,
+                `Я посчитал: ${pretty}.`,
+                `${a} ${op} ${b} = ${pretty} 🤖`
+            ]);
+        }
+        if (op === "/") return `На ноль делить нельзя 😄`;
+    }
+
+    // Время и дата берутся из устройства пользователя.
+    if (/(который час|сколько времени|время сейчас|сейчас время)/.test(q)) {
+        return `Сейчас ${new Date().toLocaleTimeString("ru-RU",{hour:"2-digit",minute:"2-digit"})} ⏰`;
+    }
+
+    if (/(какой сегодня день|какое сегодня число|сегодняшняя дата|какая дата)/.test(q)) {
+        return `Сегодня ${new Date().toLocaleDateString("ru-RU",{weekday:"long",day:"numeric",month:"long",year:"numeric"})}.`;
+    }
+
+    // Если пользователь задаёт вопрос о предыдущем сообщении.
+    if (/(что я говорил|что я писал|о чем мы говорили|о чём мы говорили)/.test(q)) {
+        if (lastUser) {
+            return reply([
+                `Перед этим ты писал: «${lastUser}» 🙂`,
+                `Последнее, что я помню из твоих сообщений: «${lastUser}».`,
+                `Мы как раз до этого говорили о таком: «${lastUser}».`
+            ]);
+        }
+        return `Пока у меня ещё недостаточно истории, чтобы это вспомнить 🙂`;
+    }
+
+    // Контекстные короткие ответы.
+    if (/^(да|ага|угу|точно|конечно)$/.test(q)) {
+        return reply([
+            `Понял 😄 Тогда продолжаем.`,
+            `Хорошо! И что будем делать дальше?`,
+            `Ага 🙂 Рассказывай дальше.`
+        ]);
+    }
+
+    if (/^(нет|неа|не)$/.test(q)) {
+        return reply([
+            `Хорошо, понял 🙂`,
+            `Ладно. Тогда попробуем по-другому.`,
+            `Окей 😄 Что тогда тебе хотелось бы?`
+        ]);
+    }
+
+    if (/(^|\s)(зачем|почему)(\s|$)/.test(q)) {
+        return reply([
+            `Хороший вопрос. А как ты сам думаешь, почему?`,
+            `Тут может быть несколько причин 🤔 Расскажи, о чём именно ты спрашиваешь.`,
+            `Давай разберёмся. Что именно тебе кажется странным?`
+        ]);
+    }
+
+    if (hadQuestionMark || /(что|кто|где|когда|как|зачем|почему|можешь|можно ли)/.test(q)) {
+        return reply([
+            `Интересный вопрос 🤔 Дай попробую разобраться вместе с тобой.`,
+            `Хороший вопрос. Можешь дать немного контекста, и я постараюсь ответить точнее.`,
+            `Я понял, что ты спрашиваешь. Пока мои знания ограничены, но попробуем разобраться 🙂`,
+            `Давай разберём по шагам. Что именно тебя интересует больше всего?`
+        ]);
+    }
+
+    // Общие ответы стараются продолжить тему, а не просто сказать "интересно".
+    return reply([
+        `Понял тебя 🙂 Расскажи чуть подробнее.`,
+        `Интересно. А что произошло дальше?`,
+        `Хм, звучит любопытно 🤔 А что ты сам об этом думаешь?`,
+        `Я тебя слушаю. Давай продолжим эту тему.`,
+        `Окей, понял. И что ты хочешь сделать с этим дальше?`,
+        `Звучит интересно 😄 Расскажи ещё немного.`
+    ]);
+}
+function scheduleBotReply(chat, userMessage) {
+    const delay = 500 + Math.floor(Math.random() * 900);
+    setTimeout(() => {
+        const current = chats.find(c => c.id === chat.id);
+        if (!current || !current.isBot) return;
+
+        const reply = generateBotReply(userMessage, current);
+        const now = new Date();
+        current.messages.push({
+            id: Date.now(),
+            text: reply,
+            mine: false,
+            time: now.toLocaleTimeString("ru-RU", {hour:"2-digit", minute:"2-digit"})
+        });
+
+        saveChats();
+        renderChats();
+        if (currentChatId === current.id) {
+            renderMessages();
+            scrollMessages();
+        }
+    }, delay);
+}
+
+async function createCommunityFromNewChat() {
+    const name = document.getElementById("newChatCommunityName").value.trim();
+    const description = document.getElementById("newChatCommunityDescription").value.trim();
+    const raw = document.getElementById("newChatCommunityMembers").value.trim();
+    const status = document.getElementById("newChatCommunityStatus");
+    if (!name) { status.textContent = "Введите название."; return; }
+    if (typeof window.createCommunity !== "function") { status.textContent = "Supabase-модуль v11 ещё не подключён."; return; }
+    status.textContent = "Создаём…";
+    try {
+        const usernames = [...new Set(raw.split(",").map(x => x.trim().replace(/^@+/, "").toLowerCase()).filter(Boolean))];
+        const result = await window.createCommunity(communityCreateType, name, description, usernames);
+        const c = {
+            id: "community_" + result.id, communityId: result.id, type: result.type,
+            name: result.name, username: result.name, avatar: result.type === "channel" ? "📢" : "👥",
+            color: result.type === "channel" ? "#7c5cff" : "#4f7cff", online: true, messages: [],
+            communityRole: "owner", communityMemberCount: result.member_count || 1
+        };
+        chats.unshift(c); saveChats(); renderChats(); closeNewChat(); openChat(c.id);
+        await syncCommunities();
+    } catch (e) { console.error(e); status.textContent = "Ошибка: " + (e.message || e); }
+}
+
+
+let selectedSearchUser = null;
+let userSearchTimer = null;
+let userSearchRequestId = 0;
+
+function normalizeUserSearchQuery(value) {
+    return String(value || "")
+        .trim()
+        .replace(/^@+/, "")
+        .toLowerCase()
+        .replace(/[^a-z0-9_]/g, "");
+}
+
+function moderationBadgeHtml(u) {
+    if (u?.moderation_status === "warning") return '<span class="moderation-star warning" title="Предупреждение">★</span>';
+    if (u?.moderation_status === "trusted") return '<span class="moderation-star trusted" title="Доверенный пользователь">★</span>';
+    return "";
+}
+
+function closeAdminUserMenu() {
+    document.querySelectorAll(".admin-user-menu").forEach(x => x.remove());
+}
+
+async function adminModerateUser(user, action) {
+    if (!isCurrentAdmin || !user?.id || typeof window.adminSetUserModeration !== "function") return;
+    try {
+        if (action === "ban") {
+            const reason = prompt("Причина блокировки:", "Нарушение правил");
+            if (reason === null) return;
+            await window.adminSetUserBan(user.id, true, reason);
+            alert("Пользователь заблокирован.");
+        } else if (action === "unban") {
+            await window.adminSetUserBan(user.id, false, "");
+            alert("Блокировка снята.");
+        } else {
+            await window.adminSetUserModeration(user.id, action);
+        }
+        closeAdminUserMenu();
+        await searchUsersLive();
+    } catch (e) {
+        alert("Не удалось изменить статус: " + (e?.message || e));
+    }
+}
+
+function openAdminUserMenu(user, button) {
+    if (!isCurrentAdmin) return;
+    closeAdminUserMenu();
+    const menu = document.createElement("div");
+    menu.className = "admin-user-menu";
+    const rect = button.getBoundingClientRect();
+    menu.style.left = Math.max(8, Math.min(window.innerWidth - 225, rect.right - 215)) + "px";
+    menu.style.top = Math.min(window.innerHeight - 220, rect.bottom + 6) + "px";
+    const items = [
+        ["★  Желтая звезда — предупреждение", "warning", false],
+        ["★  Синяя звезда — доверенный", "trusted", false],
+        ["☆  Снять отметку", "normal", false],
+        [user.is_banned ? "🔓 Разблокировать" : "⛔ Заблокировать", user.is_banned ? "unban" : "ban", true]
+    ];
+    items.forEach(([label, action, danger]) => {
+        const b = document.createElement("button");
+        b.textContent = label;
+        if (danger) b.className = "danger";
+        b.onclick = ev => { ev.stopPropagation(); adminModerateUser(user, action); };
+        menu.appendChild(b);
+    });
+    document.body.appendChild(menu);
+    setTimeout(() => document.addEventListener("click", closeAdminUserMenu, {once:true}), 0);
+}
+
+function renderUserSearchResults(users, query) {
+    const results = document.getElementById("userSearchResults");
+    if (!results) return;
+
+    const me = window.getMessengerUser ? window.getMessengerUser() : null;
+    const filtered = (users || [])
+        .filter(u => !me || u.id !== me.id)
+        .sort((a, b) => String(a.username || "").localeCompare(String(b.username || "")));
+
+    results.innerHTML = "";
+
+    if (!query) {
+        results.innerHTML = '<div class="profile-hint">Начните вводить username: например <b>@b</b> → все username на <b>b</b>, затем <b>@bo</b> → только username на <b>bo</b>.</div>';
+        return;
+    }
+
+    if (!filtered.length) {
+        results.innerHTML = '<div class="profile-hint">Пользователи, начинающиеся с «@' +
+            query.replace(/</g, "&lt;") + '», не найдены.</div>';
+        return;
+    }
+
+    filtered.forEach(u => {
+        const item = document.createElement("div");
+        item.className = "user-search-item";
+        item.onclick = () => selectSearchUser(u);
+
+        const av = document.createElement("div");
+        av.className = "user-search-avatar";
+        if (u.avatar_url) {
+            av.style.backgroundImage = `url("${u.avatar_url.replace(/"/g, "%22")}")`;
+        } else {
+            av.textContent = getInitials(u.username);
+        }
+
+        const info = document.createElement("div");
+        const nameEl = document.createElement("div");
+        nameEl.className = "user-search-name";
+        nameEl.textContent = u.username;
+        const unEl = document.createElement("div");
+        unEl.className = "user-search-username";
+        unEl.textContent = "@" + u.username;
+        info.append(nameEl, unEl);
+
+        const actions = document.createElement("div");
+        actions.style.marginLeft = "auto";
+        actions.style.display = "flex";
+        actions.style.gap = "5px";
+
+        const chatBtn = document.createElement("button");
+        chatBtn.className = "small-btn primary";
+        chatBtn.textContent = "Чат";
+        chatBtn.onclick = (ev) => {
+            ev.stopPropagation();
+            selectSearchUser(u);
+        };
+
+        const friendBtn = document.createElement("button");
+        friendBtn.className = "small-btn";
+        friendBtn.textContent = "Добавить";
+        friendBtn.onclick = async (ev) => {
+            ev.stopPropagation();
+            try {
+                await sendFriendRequest(u.id);
+                friendBtn.textContent = "Отправлено";
+                friendBtn.disabled = true;
+            } catch (e) {
+                alert(e.message || e);
+            }
+        };
+
+        actions.append(chatBtn, friendBtn);
+        if (isCurrentAdmin) {
+            const mod = document.createElement("div");
+            mod.className = "user-search-mod";
+            mod.innerHTML = moderationBadgeHtml(u);
+            const more = document.createElement("button");
+            more.className = "admin-more-btn";
+            more.type = "button";
+            more.textContent = "⋮";
+            more.title = "Модерация";
+            more.onclick = ev => { ev.stopPropagation(); openAdminUserMenu(u, more); };
+            mod.appendChild(more);
+            actions.appendChild(mod);
+        }
+        item.append(av, info, actions);
+        results.appendChild(item);
+    });
+}
+
+async function searchUsersLive() {
+    const input = document.getElementById("newChatName");
+    const results = document.getElementById("userSearchResults");
+    if (!input || !results) return;
+
+    const q = normalizeUserSearchQuery(input.value);
+    const requestId = ++userSearchRequestId;
+
+    if (!q) {
+        renderUserSearchResults([], "");
+        return;
+    }
+
+    if (q.length > 30) {
+        results.innerHTML = '<div class="profile-hint">Username может содержать максимум 30 символов.</div>';
+        return;
+    }
+
+    if (typeof window.searchMessengerUsers !== "function") {
+        results.innerHTML = '<div class="profile-hint">Подключение к Supabase ещё не готово.</div>';
+        return;
+    }
+
+    results.innerHTML = '<div class="profile-hint">Ищем пользователей на «@' + q + '»…</div>';
+
+    try {
+        const users = await window.searchMessengerUsers(q);
+        if (requestId !== userSearchRequestId) return;
+        renderUserSearchResults(users, q);
+    } catch (e) {
+        if (requestId !== userSearchRequestId) return;
+        console.error(e);
+        const errText = String(e?.message || e || "Неизвестная ошибка");
+        results.innerHTML =
+            '<div class="profile-hint">Ошибка поиска: ' +
+            errText.replace(/</g, "&lt;") +
+            '<br><small>Если здесь написано про permission/RLS — проверьте политику чтения таблицы profiles в Supabase.</small></div>';
+    }
+}
+
+function scheduleLiveUserSearch() {
+    clearTimeout(userSearchTimer);
+    userSearchTimer = setTimeout(searchUsersLive, 180);
+}
+
+function initLiveUserSearch() {
+    const input = document.getElementById("newChatName");
+    if (!input || input.dataset.liveSearchReady === "1") return;
+    input.dataset.liveSearchReady = "1";
+    input.addEventListener("input", scheduleLiveUserSearch);
+    input.addEventListener("keyup", (e) => {
+        if (e.key === "Enter") { clearTimeout(userSearchTimer); searchUsersLive(); }
+    });
+    input.addEventListener("focus", () => {
+        if (!input.value.trim()) renderUserSearchResults([], "");
+    });
+}
+
+async function createChat() {
+    const input = document.getElementById("newChatName");
+    const results = document.getElementById("userSearchResults");
+    const btn = document.getElementById("newChatActionBtn");
+    const q = normalizeUserSearchQuery(input?.value);
+
+    if (!q) {
+        renderUserSearchResults([], "");
+        return;
+    }
+
+    if (!/^[a-z0-9_]{1,30}$/.test(q)) {
+        results.innerHTML = '<div class="profile-hint">Введите username: например @Boris, Boris или @bo.</div>';
+        return;
+    }
+
+    if (typeof window.searchMessengerUsers !== "function") {
+        results.innerHTML = '<div class="profile-hint">Подключение к Supabase ещё не готово.</div>';
+        return;
+    }
+
+    btn.disabled = true;
+    btn.textContent = "Поиск...";
+    try {
+        await searchUsersLive();
+    } finally {
+        btn.disabled = false;
+        btn.textContent = "Найти";
+    }
+}
+
+function selectSearchUser(u) {
+    selectedSearchUser = u;
+    const existing = chats.find(c => c.remoteId === u.id);
+    closeNewChat();
+    if (existing) { openChat(existing.id); return; }
+    const chat = {
+        id: "remote_" + u.id,
+        remoteId: u.id,
+        name: u.username,
+        username: u.username,
+        avatar: getInitials(u.username),
+        avatarUrl: u.avatar_url || null,
+        color: "#4f7cff",
+        online: false,
+        messages: []
+    };
+    chats.unshift(chat);
+    saveChats();
+    renderChats();
+    openChat(chat.id);
+    loadRemoteConversation(chat);
+}
+
+async function loadRemoteConversation(chat) {
+    if (!chat.remoteId || typeof window.loadMessengerConversation !== "function") return;
+    try {
+        const rows = await window.loadMessengerConversation(chat.remoteId);
+        const me = window.getMessengerUser ? window.getMessengerUser() : null;
+        chat.messages = (rows || []).map(m => ({
+            id: m.id,
+            text: m.photo_url ? "" : (m.content || ""),
+            photo: m.photo_url || null,
+            mine: !!me && m.sender_id === me.id,
+            time: new Date(m.created_at).toLocaleTimeString("ru-RU", {hour:"2-digit", minute:"2-digit"})
+        }));
+        saveChats();
+        if (currentChatId === chat.id) { renderMessages(); renderChats(); scrollMessages(); }
+    } catch (e) { console.error("Conversation:", e); }
+}
+
+
+/* =========================
+   FRIENDS
+========================= */
+
+function openFriends(){
+    document.getElementById("friendsModal").classList.add("show");
+    switchFriendsTab(friendsTab);
+    loadFriendsData();
+}
+function closeFriends(){document.getElementById("friendsModal").classList.remove("show");}
+function switchFriendsTab(tab){
+    friendsTab=tab;
+    document.getElementById("friendsTabBtn").classList.toggle("active",tab==="friends");
+    document.getElementById("requestsTabBtn").classList.toggle("active",tab==="requests");
+    renderFriendsModal();
+}
+function updateFriendBadges(){
+    const n=incomingRequests.length;
+    const b=document.getElementById("friendBadge"), m=document.getElementById("requestBadgeInModal");
+    [b,m].forEach(x=>{if(!x)return;x.textContent=n;x.style.display=n?"inline-flex":"none";});
+}
+async function loadFriendsData(){
+    if(typeof window.getFriendsData!=="function") return;
+    try{
+        const d=await window.getFriendsData();
+        friendsData=d.friends||[];
+        incomingRequests=d.incoming||[];
+        updateFriendBadges();
+        renderFriendsModal();
+        await syncPersistentChats();
+    }catch(e){console.error("Friends:",e)}
+}
+function friendAvatarHtml(u){
+    const url=u.avatar_url||u.avatarUrl;
+    return url ? `<div class="friend-avatar" style="background-image:url('${String(url).replace(/'/g,"%27")}')"></div>` : `<div class="friend-avatar">${escapeHtml(getInitials(u.username||u.name||"?"))}</div>`;
+}
+function escapeHtml(v){return String(v??"").replace(/[&<>'"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;","'":"&#39;",'"':"&quot;"}[c]));}
+function renderFriendsModal(){
+    const box=document.getElementById("friendsList"); if(!box)return;
+    if(friendsTab==="friends"){
+        document.getElementById("friendsCount").textContent=`(${friendsData.length})`;
+        if(!friendsData.length){box.innerHTML='<div class="profile-hint">Пока нет друзей. Откройте «Найти пользователя», чтобы отправить заявку.</div>';return;}
+        box.innerHTML="";
+        friendsData.forEach(u=>{
+            const row=document.createElement("div");row.className="friend-item";
+            row.innerHTML=`${friendAvatarHtml(u)}<div class="friend-info"><div class="friend-name">${escapeHtml(u.username)}</div><div class="friend-username">@${escapeHtml(u.username)}</div></div><div class="friend-actions"><button class="small-btn primary">Написать</button><button class="small-btn danger">Удалить</button></div>`;
+            row.querySelector(".primary").onclick=()=>{closeFriends();selectSearchUser(u)};
+            row.querySelector(".danger").onclick=async()=>{if(confirm(`Удалить @${u.username} из друзей?`)){await window.removeFriend(u.id);await loadFriendsData();}};
+            box.appendChild(row);
+        });
+    }else{
+        document.getElementById("friendsCount").textContent=`(${incomingRequests.length})`;
+        if(!incomingRequests.length){box.innerHTML='<div class="profile-hint">Новых заявок нет.</div>';return;}
+        box.innerHTML="";
+        incomingRequests.forEach(r=>{
+            const u=r.requester||{}; const row=document.createElement("div");row.className="friend-item";
+            row.innerHTML=`${friendAvatarHtml(u)}<div class="friend-info"><div class="friend-name">${escapeHtml(u.username||"Пользователь")}</div><div class="friend-username">@${escapeHtml(u.username||"")}</div></div><div class="friend-actions"><button class="small-btn primary">Принять</button><button class="small-btn danger">Отклонить</button></div>`;
+            row.querySelector(".primary").onclick=async()=>{await window.respondFriendRequest(r.id,"accepted");await loadFriendsData();};
+            row.querySelector(".danger").onclick=async()=>{await window.respondFriendRequest(r.id,"rejected");await loadFriendsData();};
+            box.appendChild(row);
+        });
+    }
+}
+async function sendFriendRequest(userId){
+    try{await window.sendFriendRequest(userId);alert("Заявка отправлена!");await loadFriendsData();}
+    catch(e){alert("Не удалось отправить заявку: "+e.message)}
+}
+
+/* =========================
+   PERSISTENT CHAT HISTORY
+========================= */
+async function syncPersistentChats(){
+    if(typeof window.loadMessengerData!="function") return;
+    try{
+        const rows=await window.loadMessengerData();
+        const map=new Map(chats.filter(c=>c.remoteId).map(c=>[c.remoteId,c]));
+        for(const f of friendsData){
+            if(!map.has(f.id)){
+                const c={id:"remote_"+f.id,remoteId:f.id,name:f.username,username:f.username,avatar:getInitials(f.username),avatarUrl:f.avatar_url||null,color:"#4f7cff",online:false,messages:[]};
+                chats.unshift(c);map.set(f.id,c);
+            }
+        }
+        for(const m of rows.messages||[]){
+            const other=m.sender_id===currentUser?.id?m.receiver_id:m.sender_id;
+            if(!other)continue;
+            let c=map.get(other);
+            if(!c){
+                const prof=await window.getMessengerProfileById(other); if(!prof)continue;
+                c={id:"remote_"+other,remoteId:other,name:prof.username,username:prof.username,avatar:getInitials(prof.username),avatarUrl:prof.avatar_url||null,color:"#4f7cff",online:false,messages:[]};
+                chats.unshift(c);map.set(other,c);
+            }
+            if(!c.messages.some(x=>String(x.id)===String(m.id))) c.messages.push({id:m.id,text:m.content||"",mine:m.sender_id===currentUser.id,time:new Date(m.created_at).toLocaleTimeString("ru-RU",{hour:"2-digit",minute:"2-digit"})});
+        }
+        chats.forEach(c=>{if(c.remoteId)c.messages.sort((a,b)=>Number(a.id)-Number(b.id));});
+        saveChats();renderChats();
+        if(currentChatId && document.getElementById("messages")) renderMessages();
+    }catch(e){console.error("History sync:",e)}
+}
+
+/* =========================
+   REPORTS / ADMIN CHAT
+========================= */
+function openReportModal(){
+    const chat=chats.find(c=>c.id===currentChatId); if(!chat?.remoteId)return;
+    document.getElementById("reportTargetHint").textContent=`Жалоба на @${chat.username||chat.name}`;
+    document.getElementById("reportDetails").value="";
+    document.getElementById("reportModal").classList.add("show");
+}
+function closeReportModal(){document.getElementById("reportModal").classList.remove("show");}
+async function submitReport(){
+    const chat=chats.find(c=>c.id===currentChatId); if(!chat?.remoteId)return;
+    try{
+        await window.submitMessengerReport(chat.remoteId,document.getElementById("reportReason").value,document.getElementById("reportDetails").value.trim());
+        closeReportModal(); alert("Жалоба отправлена администрации.");
+    }catch(e){alert("Не удалось отправить жалобу: "+e.message)}
+}
+function openAdminPanel(){if(!isCurrentAdmin)return;document.getElementById("adminModal").classList.add("show");loadAdminReports();}
+function closeAdminPanel(){document.getElementById("adminModal").classList.remove("show");}
+function renderAdminReports(reports){
+    const box=document.getElementById("adminReportsList");
+    if(!reports?.length){box.innerHTML='<div class="profile-hint">Новых жалоб нет.</div>';return;}
+    box.innerHTML="";
+    reports.forEach(r=>{
+        const card=document.createElement("div");card.className="report-card";
+        const status=r.status||"open";
+        card.innerHTML=`<div class="report-head"><div><div class="report-title">На пользователя @${escapeHtml(r.reported?.username||"неизвестно")} пожаловались</div><div class="report-meta">От: @${escapeHtml(r.reporter?.username||"неизвестно")} · ${new Date(r.created_at).toLocaleString("ru-RU")}</div></div><span class="status-pill">${escapeHtml(status)}</span></div><div class="report-reason"><b>Причина:</b> ${escapeHtml(r.reason)}</div>${r.details?`<div class="report-details">${escapeHtml(r.details)}</div>`:""}<div class="report-actions"><button class="small-btn">Закрыть</button><button class="small-btn danger">Заблокировать</button><button class="small-btn primary">Открыть чат</button></div>`;
+        card.querySelector(".small-btn").onclick=async()=>{await window.updateReportStatus(r.id,"resolved");loadAdminReports();};
+        card.querySelector(".danger").onclick=async()=>{if(confirm(`Заблокировать @${r.reported?.username||"пользователя"}?`)){await window.adminBanUser(r.reported_user_id,r.reason);await window.updateReportStatus(r.id,"resolved");loadAdminReports();}};
+        card.querySelector(".primary").onclick=async()=>{const u=r.reported;if(!u)return;closeAdminPanel();selectSearchUser(u);};
+        box.appendChild(card);
+    });
+}
+async function loadAdminReports(){
+    if(!isCurrentAdmin||typeof window.getAdminReports!=="function")return;
+    try{const rows=await window.getAdminReports();renderAdminReports(rows);document.getElementById("reportBadge").style.display="none";}catch(e){document.getElementById("adminReportsList").innerHTML='<div class="profile-hint">Ошибка загрузки жалоб: '+escapeHtml(e.message)+'</div>';}
+}
+
+/* =========================
+   GROUPS / CHANNELS (v11)
+========================= */
+let communityCreateType = "group";
+
+function openCommunityModal(type){
+    communityCreateType = type === "channel" ? "channel" : "group";
+    document.getElementById("communityModalTitle").textContent = communityCreateType === "channel" ? "Создать канал" : "Создать группу";
+    document.getElementById("communityNameInput").value = "";
+    document.getElementById("communityDescriptionInput").value = "";
+    document.getElementById("communityMembersInput").value = "";
+    document.getElementById("communityCreateStatus").textContent = communityCreateType === "channel" ? "Канал: подписчики читают сообщения, а писать могут владелец и администраторы." : "Группа: все участники могут писать сообщения.";
+    document.getElementById("communityModal").classList.add("show");
+    setTimeout(()=>document.getElementById("communityNameInput").focus(),80);
+}
+function closeCommunityModal(){document.getElementById("communityModal").classList.remove("show");}
+
+async function createCommunityFromModal(){
+    const name=document.getElementById("communityNameInput").value.trim();
+    const description=document.getElementById("communityDescriptionInput").value.trim();
+    const raw=document.getElementById("communityMembersInput").value.trim();
+    const status=document.getElementById("communityCreateStatus");
+    if(!name){status.textContent="Введите название.";return;}
+    if(typeof window.createCommunity!="function"){status.textContent="Supabase-модуль v11 ещё не подключён.";return;}
+    status.textContent="Создаём…";
+    try{
+        const usernames=[...new Set(raw.split(",").map(x=>x.trim().replace(/^@+/ ,"").toLowerCase()).filter(Boolean))];
+        const result=await window.createCommunity(communityCreateType,name,description,usernames);
+        const c={
+            id:"community_"+result.id, communityId:result.id, type:result.type,
+            name:result.name, username:result.name, avatar:result.type==="channel"?"📢":"👥",
+            color:result.type==="channel"?"#7c5cff":"#4f7cff", online:true, messages:[],
+            communityRole:"owner", communityMemberCount:result.member_count||1
+        };
+        chats.unshift(c); saveChats(); renderChats(); closeCommunityModal(); openChat(c.id);
+        await syncCommunities();
+    }catch(e){console.error(e);status.textContent="Ошибка: "+(e.message||e);}
+}
+
+async function syncCommunities(){
+    if(typeof window.getMyCommunities!=="function") return;
+    try{
+        const rows=await window.getMyCommunities();
+        const map=new Map(chats.filter(c=>c.communityId).map(c=>[c.communityId,c]));
+        for(const r of rows||[]){
+            let c=map.get(r.id);
+            if(!c){
+                c={id:"community_"+r.id,communityId:r.id,type:r.type,name:r.name,username:r.name,avatar:r.type==="channel"?"📢":"👥",color:r.type==="channel"?"#7c5cff":"#4f7cff",online:true,messages:[],communityRole:r.role,communityMemberCount:r.member_count||1};
+                chats.unshift(c);
+            }else{
+                Object.assign(c,{type:r.type,name:r.name,username:r.name,communityRole:r.role,communityMemberCount:r.member_count||1});
+            }
+        }
+        saveChats();renderChats();
+    }catch(e){console.error("Communities:",e)}
+}
+
+async function loadCommunityConversation(chat){
+    if(!chat.communityId || typeof window.loadCommunityConversation!=="function") return;
+    try{
+        const rows=await window.loadCommunityConversation(chat.communityId);
+        const me=window.getMessengerUser?window.getMessengerUser():null;
+        chat.messages=(rows||[]).map(m=>({id:m.id,text:m.photo_url?"":(m.content||""),photo:m.photo_url||null,mine:!!me&&m.sender_id===me.id,time:new Date(m.created_at).toLocaleTimeString("ru-RU",{hour:"2-digit",minute:"2-digit"}),senderName:m.sender?.username||""}));
+        saveChats();
+        if(currentChatId===chat.id){renderMessages();renderChats();scrollMessages();}
+    }catch(e){console.error("Community conversation:",e)}
+}
+
+/* community messages show sender in groups/channels */
+const __v11RenderMessages=renderMessages;
+renderMessages=function(){
+    __v11RenderMessages();
+    const chat=chats.find(c=>c.id===currentChatId);
+    if(!chat?.communityId) return;
+    document.querySelectorAll("#messages .message").forEach((el,i)=>{
+        const m=chat.messages?.[i];
+        if(m?.senderName && !m.mine){
+            const bubble=el.querySelector(".bubble");
+            if(bubble && !bubble.querySelector(".community-sender")){
+                const s=document.createElement("div");s.className="community-sender";s.style.cssText="font-size:11px;font-weight:800;color:var(--accent);margin-bottom:4px";s.textContent="@"+m.senderName;bubble.prepend(s);
+            }
+        }
+    });
+};
+
+
+/* =========================
+   DELETE CHAT
+========================= */
+
+function deleteCurrentChat() {
+
+    if (currentChatId === null) {
+        return;
+    }
+
+
+    const chat =
+        chats.find(c => c.id === currentChatId);
+
+    if (!chat) return;
+
+
+    const confirmed =
+        confirm(
+            `Удалить чат с ${chat.name}?`
+        );
+
+
+    if (!confirmed) {
+        return;
+    }
+
+
+    chats =
+        chats.filter(
+            c => c.id !== currentChatId
+        );
+
+
+    currentChatId =
+        chats.length
+            ? chats[0].id
+            : null;
+
+
+    saveChats();
+
+    renderChats();
+
+
+    if (currentChatId) {
+
+        openChat(currentChatId);
+
+    } else {
+
+        document
+            .getElementById("headerName")
+            .textContent = "Выберите чат";
+
+        document
+            .getElementById("headerStatus")
+            .textContent = "—";
+
+        document
+            .getElementById("headerAvatar")
+            .textContent = "?";
+
+        renderMessages();
+
+    }
+
+}
+
+
+/* =========================
+   EMOJI
+========================= */
+
+function toggleEmoji() {
+
+    document
+        .getElementById("emojiPanel")
+        .classList.toggle("show");
+
+}
+
+
+function addEmoji(emoji) {
+
+    const input =
+        document.getElementById("messageInput");
+
+    input.value += emoji;
+
+    input.focus();
+
+    autoResize(input);
+
+    document
+        .getElementById("emojiPanel")
+        .classList.remove("show");
+
+}
+
+
+/* =========================
+   MODALS
+========================= */
+
+document.addEventListener("click", event => {
+
+    const panel =
+        document.getElementById("emojiPanel");
+
+    const emojiButton =
+        document.querySelector(".emoji-btn");
+
+
+    if (
+        panel.classList.contains("show") &&
+        !panel.contains(event.target) &&
+        !emojiButton.contains(event.target)
+    ) {
+
+        panel.classList.remove("show");
+
+    }
+
+});
+
+
+document
+    .getElementById("newChatModal")
+    .addEventListener("click", event => {
+
+        if (
+            event.target.id === "newChatModal"
+        ) {
+
+            closeNewChat();
+
+        }
+
+    });
+
+
+document
+    .getElementById("profileModal")
+    .addEventListener("click", event => {
+
+        if (
+            event.target.id === "profileModal"
+        ) {
+
+            closeProfile();
+
+        }
+
+    });
+
+
+document.getElementById("friendsModal")?.addEventListener("click",e=>{if(e.target.id==="friendsModal")closeFriends();});
+document.getElementById("reportModal")?.addEventListener("click",e=>{if(e.target.id==="reportModal")closeReportModal();});
+document.getElementById("adminModal")?.addEventListener("click",e=>{if(e.target.id==="adminModal")closeAdminPanel();});
+window.addEventListener("resize",closeAdminUserMenu);
+window.addEventListener("scroll",closeAdminUserMenu,true);
+
+/* ENTER IN MODALS */
+
+document
+    .getElementById("newChatName")
+    .addEventListener("keydown", event => {
+
+        if (event.key === "Enter") {
+            createChat();
+        }
+
+        if (event.key === "Escape") {
+            closeNewChat();
+        }
+
+    });
+
+
+document
+    .getElementById("profileNameInput")
+    .addEventListener("keydown", event => {
+
+        if (event.key === "Enter") {
+            saveProfile();
+        }
+
+        if (event.key === "Escape") {
+            closeProfile();
+        }
+
+    });
+
+
+/* =========================
+   DARK MODE
+========================= */
+
+function loadTheme() {
+
+    const theme =
+        localStorage.getItem("messenger_theme");
+
+    if (theme === "dark") {
+
+        document
+            .body
+            .classList
+            .add("dark");
+
+    }
+
+}
+
+
+/* Нажатие Ctrl + Shift + D
+   переключает тему */
+
+document.addEventListener(
+    "keydown",
+    event => {
+
+        if (
+            event.ctrlKey &&
+            event.shiftKey &&
+            event.key.toLowerCase() === "d"
+        ) {
+
+            document
+                .body
+                .classList
+                .toggle("dark");
+
+
+            localStorage.setItem(
+                "messenger_theme",
+
+                document.body.classList.contains("dark")
+                    ? "dark"
+                    : "light"
+            );
+
+        }
+
+    }
+);
+
+
+loadTheme();
+
+</script>
+
+
+<!-- SUPABASE MESSENGER INTEGRATION -->
+<style>
+#sb-auth-overlay{position:fixed;inset:0;z-index:99999;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.72);backdrop-filter:blur(8px)}
+#sb-auth-card{width:min(420px,calc(100vw - 32px));padding:28px;border-radius:18px;background:#1d1f24;color:#fff;box-shadow:0 20px 70px rgba(0,0,0,.45);font-family:system-ui,sans-serif}
+#sb-auth-card h2{margin:0 0 18px}
+#sb-auth-card input{width:100%;box-sizing:border-box;margin:7px 0;padding:12px 14px;border-radius:10px;border:1px solid #444;background:#111318;color:#fff}
+#sb-auth-card button{width:100%;margin-top:10px;padding:12px;border:0;border-radius:10px;cursor:pointer;font-weight:700}
+#sb-auth-login{background:#4f8cff;color:#fff}#sb-auth-signup{background:#30343d;color:#fff}
+#sb-auth-status{min-height:20px;margin-top:10px;font-size:13px;opacity:.9}
+#sb-userbar{position:fixed;right:14px;top:14px;z-index:9998;display:none;gap:8px;align-items:center;padding:8px 10px;border-radius:12px;background:rgba(20,22,27,.92);color:#fff;font:13px system-ui,sans-serif;box-shadow:0 6px 25px rgba(0,0,0,.25)}
+#sb-logout{border:0;border-radius:8px;padding:6px 9px;cursor:pointer}
+</style>
+<div id="sb-auth-overlay"><div id="sb-auth-card">
+<h2 id="sb-auth-title">Вход в Messenger</h2>
+<input id="sb-email" type="text" autocomplete="username" placeholder="Имя пользователя или email">
+<input id="sb-password" type="password" autocomplete="current-password" placeholder="Пароль">
+<input id="sb-username" type="text" autocomplete="nickname" placeholder="Имя пользователя (для регистрации)" style="display:none">
+<button id="sb-auth-login">Войти</button>
+<button id="sb-auth-signup">Регистрация</button>
+<div id="sb-auth-status"></div>
+</div></div>
+<div id="sb-userbar"><span id="sb-user-name"></span><button id="sb-logout">Выйти</button></div>
+<script>
+(()=> {
+const SB_URL="https://nwzpaealogymfzmzfbei.supabase.co";
+const SB_KEY="sb_publishable_OBVm01c-hIKRXBVlRD0hlQ_fu4eM1cn";
+
+const sb=window.supabase.createClient(SB_URL,SB_KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:false,storageKey:"mbmessage-auth"}});
+
+function checkMessengerProtocol(){
+  if(location.protocol==="file:"){
+    showLogin();
+    msg("Запустите мессенджер через http://localhost, а не через файл C:/... — браузер блокирует сетевой запрос к Supabase.", false);
+    return false;
+  }
+  return true;
+}
+const overlay=document.getElementById("sb-auth-overlay"),email=document.getElementById("sb-email"),password=document.getElementById("sb-password"),username=document.getElementById("sb-username"),status=document.getElementById("sb-auth-status"),loginBtn=document.getElementById("sb-auth-login"),signupBtn=document.getElementById("sb-auth-signup"),userbar=document.getElementById("sb-userbar"),userName=document.getElementById("sb-user-name"),logoutBtn=document.getElementById("sb-logout");
+let currentUser=null,realtimeChannel=null;
+function msg(t,ok=false){status.textContent=t;status.style.color=ok?"#6ee7a0":"#ff8f8f"}
+function showLogin(){overlay.style.display="flex";userbar.style.display="none"}
+async function showApp(u,p){
+  if(p?.is_banned){
+    currentUser=null;
+    showLogin();
+    msg("Этот аккаунт заблокирован администрацией." );
+    return;
+  }
+  currentUser=u;
+  if(p){
+    user.name=p.username||u.email||"Пользователь";
+    user.avatarUrl=p.avatar_url||null;
+    saveUser();
+    if(typeof updateProfile==="function") updateProfile();
+  }
+  overlay.style.display="none";
+  userbar.style.display="flex";
+  userName.textContent=p?.username||u.email||"Пользователь";
+  isCurrentAdmin=await loadAdminState(u);
+  const adminBtn=document.getElementById("adminOpenBtn"); if(adminBtn) adminBtn.style.display=isCurrentAdmin?"block":"none";
+  setTimeout(()=>{loadFriendsData();syncPersistentChats();syncCommunities();},0);
+}
+const ADMIN_AUTH_EMAIL="evrikaadmin@evrikamessage.app";
+function isAdminUser(u){return (u?.email||"").toLowerCase()===ADMIN_AUTH_EMAIL;}
+async function loadAdminState(u){
+  try {
+    const {data,error}=await sb.rpc("is_messenger_admin");
+    if(!error) return !!data;
+  } catch(e) {}
+  return isAdminUser(u);
+}
+async function ensureProfile(u,requested){
+let {data:existing}=await sb.from("profiles").select("id,username,avatar_url,is_admin,moderation_status,is_banned,ban_reason").eq("id",u.id).maybeSingle();
+// Администратор всегда имеет отдельное имя EAdmin. Если профиль был создан раньше
+// под другим именем, исправляем только профиль этого Auth-пользователя.
+if(existing){
+  if(isAdminUser(u) && existing.username!=="EAdmin"){
+    let {data:updated,error}=await sb.from("profiles").update({username:"EAdmin"}).eq("id",u.id).select("id,username,avatar_url,is_admin,moderation_status,is_banned,ban_reason").single();
+    if(!error && updated) return updated;
+  }
+  return existing;
+}
+let clean=(isAdminUser(u)?"EAdmin":(requested||u.user_metadata?.username||(u.email||"").split("@")[0]||"user")).trim().replace(/\s+/g,"_").replace(/^@+/,"").toLowerCase().slice(0,30)||"user";if(!isAdminUser(u)&&!/^[a-z0-9_]{3,30}$/.test(clean))clean="user_"+u.id.slice(0,8);
+let {data:created,error}=await sb.from("profiles").insert({id:u.id,username:clean}).select("id,username,avatar_url,is_admin,moderation_status,is_banned,ban_reason").single();
+if(!error)return created;
+let fallback=clean.slice(0,32)+"_"+u.id.slice(0,6);
+let retry=await sb.from("profiles").insert({id:u.id,username:fallback}).select("id,username,avatar_url,is_admin,moderation_status,is_banned,ban_reason").single();
+if(retry.error)throw retry.error;return retry.data;
+}
+async function initSession(){
+  if(!checkMessengerProtocol())return;
+  let {data:{session}}=await sb.auth.getSession();
+  if(!session){showLogin();return}
+  try{
+    let p=await ensureProfile(session.user);
+    await showApp(session.user,p);
+    subscribeRealtime();
+    subscribeCommunityRealtime();
+  }catch(e){console.error(e);showLogin();msg("Не удалось загрузить профиль: "+e.message)}
+}
+loginBtn.onclick=async()=>{
+  msg("");
+  const loginValue=email.value.trim();
+  if(!loginValue)return msg("Введите имя пользователя или email.");
+  // Отдельный вход администратора: EvrikaAdmin -> реальный Auth email.
+  const authEmail=loginValue.toLowerCase()==="evrikaadmin"
+    ? ADMIN_AUTH_EMAIL
+    : loginValue;
+  const isAdmin=authEmail.toLowerCase()===ADMIN_AUTH_EMAIL;
+  let {data,error}=await sb.auth.signInWithPassword({email:authEmail,password:password.value});
+  if(error)return msg("Не удалось войти: "+error.message);
+  try{
+    let p=await ensureProfile(data.user,isAdmin?"EAdmin":undefined);
+    await showApp(data.user,p);
+    subscribeRealtime();
+    subscribeCommunityRealtime();
+  }catch(e){
+    msg("Вход выполнен, но профиль не загрузился: "+e.message);
+  }
+};
+signupBtn.onclick=async()=>{
+if(username.style.display==="none"){username.style.display="block";document.getElementById("sb-auth-title").textContent="Регистрация";msg("Введите имя пользователя и нажмите «Регистрация» ещё раз.",true);return}
+msg("");let un=username.value.trim();if(un.length<2)return msg("Имя пользователя: минимум 2 символа.");if(password.value.length<6)return msg("Пароль должен быть не короче 6 символов.");
+let {data,error}=await sb.auth.signUp({email:email.value.trim(),password:password.value,options:{data:{username:un}}});if(error)return msg(error.message);
+if(!data.session){msg("Регистрация создана. Проверьте email и подтвердите аккаунт.",true);return}
+try{let p=await ensureProfile(data.user,un);await showApp(data.user,p);subscribeRealtime();subscribeCommunityRealtime()}catch(e){msg("Аккаунт создан, но профиль не создался: "+e.message)}
+};
+logoutBtn.onclick=async()=>{
+  currentUser=null;
+  showLogin();
+  if(realtimeChannel){try{await sb.removeChannel(realtimeChannel);}catch(e){console.warn(e)}realtimeChannel=null;} if(adminRealtimeChannel){try{await sb.removeChannel(adminRealtimeChannel);}catch(e){console.warn(e)}adminRealtimeChannel=null;}
+  try{ await sb.auth.signOut({scope:"local"}); }catch(e){ console.warn("signOut:",e); }
+};
+// ВАЖНО: callback не должен делать await запросов Supabase внутри onAuthStateChange.
+// Иначе Supabase может удерживать lock и signOut/signIn зависает.
+sb.auth.onAuthStateChange((_event,session)=>{
+  if(!session){
+    currentUser=null;
+    showLogin();
+    return;
+  }
+  // Выносим запросы за пределы callback, чтобы не блокировать Auth lock.
+  setTimeout(async()=>{
+    try{
+      let p=await ensureProfile(session.user);
+      if(currentUser?.id===session.user.id || !currentUser){
+        await showApp(session.user,p);
+        subscribeRealtime();
+        subscribeCommunityRealtime();
+      }
+    }catch(e){console.error("Auth state:",e)}
+  },0);
+});
+window.updateMessengerProfile=async({username,avatar_url})=>{
+  if(!currentUser) throw new Error("Сначала войдите в аккаунт.");
+  let clean=String(username||"").trim().replace(/^@+/,"").replace(/\\s+/g,"_").toLowerCase();
+  if(!/^[a-z0-9_]{3,30}$/.test(clean)){
+    throw new Error("Username должен быть 3–30 символов: латинские буквы, цифры и _.");
+  }
+
+  // Проверяем, занят ли username другим аккаунтом.
+  // Проверяем занятость без maybeSingle(): если в старой базе уже есть
+  // дубликаты username, maybeSingle() выдаёт ошибку "Cannot coerce...".
+  // Нам достаточно найти хотя бы одну чужую запись.
+  const {data: takenRows, error: checkError}=await sb.from("profiles")
+    .select("id")
+    .eq("username",clean)
+    .neq("id",currentUser.id)
+    .limit(1);
+  if(checkError) throw checkError;
+  if(takenRows && takenRows.length) throw new Error("Этот username уже занят.");
+
+  // Обновляем профиль по Auth ID. Не требуем от Supabase вернуть ровно одну
+  // JSON-строку — это также защищает сохранение фотографии от ошибки coercion.
+  const {error}=await sb.from("profiles")
+    .update({username:clean,avatar_url:avatar_url||null})
+    .eq("id",currentUser.id);
+  if(error) throw error;
+
+  user.name=clean;
+  user.username=clean;
+  user.avatarUrl=avatar_url||null;
+  saveUser();
+  if(typeof updateProfile==="function") updateProfile();
+  userName.textContent=clean;
+  const ud=document.getElementById("profileUsernameDisplay");
+  if(ud) ud.textContent="@"+clean;
+  return {id:currentUser.id,username:clean,avatar_url:avatar_url||null};
+};
+async function logoutMessenger(){
+  const btn=document.getElementById("profileLogoutBtn");
+  if(btn){btn.disabled=true;btn.textContent="Выход...";}
+
+  // Сначала мгновенно закрываем приложение — пользователь не должен ждать сеть.
+  currentUser=null;
+  if(realtimeChannel){
+    try{await sb.removeChannel(realtimeChannel);}catch(e){console.warn("channel:",e)}
+    realtimeChannel=null;
+  }
+  closeProfile();
+  showLogin();
+  email.value="";
+  password.value="";
+  username.value="";
+  msg("");
+
+  // Не ждём Auth lock бесконечно. Для выхода достаточно локально удалить сессию.
+  try{
+    await Promise.race([
+      sb.auth.signOut({scope:"local"}),
+      new Promise(resolve=>setTimeout(resolve,1000))
+    ]);
+  }catch(e){
+    console.warn("signOut:",e);
+  }finally{
+    if(btn){btn.disabled=false;btn.textContent="Выйти из аккаунта";}
+  }
+}
+
+function syncProfileUsernameField(){
+  const inp=document.getElementById("profileUsernameInput");
+  const disp=document.getElementById("profileUsernameDisplay");
+  if(!inp) return;
+  const val=(user?.username||user?.name||"").toString().replace(/^@+/,"");
+  if(val) inp.value="@"+val;
+  if(disp) disp.textContent=val?"@"+val:"";
+}
+const _oldOpenProfile = window.openProfile;
+if(typeof _oldOpenProfile==="function"){
+  window.openProfile=function(){
+    const r=_oldOpenProfile.apply(this,arguments);
+    setTimeout(syncProfileUsernameField,0);
+    return r;
+  };
+}
+
+
+
+window.logoutMessenger=logoutMessenger;
+
+const profileLogoutBtn=document.getElementById("profileLogoutBtn");
+if(profileLogoutBtn) profileLogoutBtn.addEventListener("click",logoutMessenger);
+
+window.addMessageToChat=async function(m){
+  const otherId = m.sender_id === currentUser?.id ? m.receiver_id : m.sender_id;
+  let chat = chats.find(c => c.remoteId === otherId);
+  if(!chat){
+    try {
+      const u = await window.getMessengerProfileById(otherId);
+      if(!u) return;
+      chat = {id:"remote_"+u.id,remoteId:u.id,name:u.username,username:u.username,avatar:getInitials(u.username),avatarUrl:u.avatar_url||null,color:"#4f7cff",online:false,messages:[]};
+      chats.unshift(chat);
+    } catch(e){ console.error(e); return; }
+  }
+  chat.messages.push({id:m.id,text:m.photo_url?"":(m.content||""),photo:m.photo_url||null,mine:m.sender_id===currentUser.id,time:new Date(m.created_at||Date.now()).toLocaleTimeString("ru-RU",{hour:"2-digit",minute:"2-digit"})});
+  saveChats(); renderChats();
+  if(currentChatId===chat.id){ renderMessages(); scrollMessages(); }
+};
+
+function subscribeRealtime(){
+  if(!currentUser||realtimeChannel)return;
+  realtimeChannel=sb.channel("mbmessage-user-"+currentUser.id)
+    .on("postgres_changes",{event:"INSERT",schema:"public",table:"messages"},payload=>{let m=payload.new;if(m.sender_id!==currentUser.id&&m.receiver_id===currentUser.id){let fn=window.addMessageToChat||window.renderMessage||window.receiveMessage;if(typeof fn==="function")fn(m);else console.log("Новое сообщение:",m)}})
+    .on("postgres_changes",{event:"*",schema:"public",table:"friend_requests"},()=>loadFriendsData())
+    .subscribe();
+  if(isCurrentAdmin){
+    adminRealtimeChannel=sb.channel("mbmessage-admin-reports").on("postgres_changes",{event:"*",schema:"public",table:"reports"},()=>{const b=document.getElementById("reportBadge");if(b){b.textContent="!";b.style.display="inline-flex";} if(document.getElementById("adminModal")?.classList.contains("show"))loadAdminReports();}).subscribe();
+  }
+}
+window.uploadMessengerImage=async(file)=>{
+  if(!currentUser) throw new Error("Сначала войдите в аккаунт.");
+  if(!file || !file.type.startsWith("image/")) throw new Error("Можно отправлять только изображения.");
+  if(file.size>8*1024*1024) throw new Error("Фото слишком большое. Максимум 8 МБ.");
+  const ext=(file.type.split("/")[1]||"jpg").replace(/[^a-z0-9]/gi,"").toLowerCase()||"jpg";
+  const path=currentUser.id+"/"+Date.now()+"-"+crypto.randomUUID()+"."+ext;
+  const {error}=await sb.storage.from("message-media").upload(path,file,{contentType:file.type,cacheControl:"3600",upsert:false});
+  if(error) throw error;
+  const {data}=sb.storage.from("message-media").getPublicUrl(path);
+  return data.publicUrl;
+};
+window.sendMessengerMessage=async(receiverId,text,photoUrl=null)=>{if(!currentUser)throw new Error("Сначала войдите в аккаунт.");let content=String(text||"").trim();if(!content && !photoUrl)return null;let {data,error}=await sb.from("messages").insert({sender_id:currentUser.id,receiver_id:receiverId,content:content||"📷 Фото",photo_url:photoUrl||null}).select().single();if(error)throw error;return data};
+
+window.getFriendsData=async()=>{
+  if(!currentUser) return {friends:[],incoming:[]};
+  const {data,error}=await sb.from("friend_requests").select("id,requester_id,addressee_id,status,created_at,requester:profiles!friend_requests_requester_id_fkey(id,username,avatar_url),addressee:profiles!friend_requests_addressee_id_fkey(id,username,avatar_url)").or("requester_id.eq."+currentUser.id+",addressee_id.eq."+currentUser.id).order("created_at",{ascending:false});
+  if(error)throw error;
+  const friends=[],incoming=[];
+  for(const r of data||[]){
+    if(r.status==="accepted") friends.push(r.requester_id===currentUser.id?r.addressee:r.requester);
+    else if(r.status==="pending" && r.addressee_id===currentUser.id) incoming.push(r);
+  }
+  const uniq=new Map(friends.filter(Boolean).map(x=>[x.id,x]));
+  return {friends:[...uniq.values()],incoming};
+};
+window.sendFriendRequest=async userId=>{
+  if(!currentUser)throw new Error("Сначала войдите в аккаунт.");
+  if(userId===currentUser.id)throw new Error("Нельзя добавить самого себя.");
+  const {data:existing,error:e1}=await sb.from("friend_requests").select("id,status,requester_id,addressee_id").or("and(requester_id.eq."+currentUser.id+",addressee_id.eq."+userId+"),and(requester_id.eq."+userId+",addressee_id.eq."+currentUser.id+")").limit(1);
+  if(e1)throw e1;
+  if(existing?.length){if(existing[0].status==="accepted")throw new Error("Вы уже друзья.");if(existing[0].status==="pending")throw new Error("Заявка уже существует.");await sb.from("friend_requests").delete().eq("id",existing[0].id);}
+  const {error}=await sb.from("friend_requests").insert({requester_id:currentUser.id,addressee_id:userId,status:"pending"}); if(error)throw error;
+};
+window.respondFriendRequest=async(id,status)=>{const {error}=await sb.from("friend_requests").update({status}).eq("id",id).eq("addressee_id",currentUser.id);if(error)throw error;};
+window.removeFriend=async userId=>{const {error}=await sb.from("friend_requests").delete().or("and(requester_id.eq."+currentUser.id+",addressee_id.eq."+userId+"),and(requester_id.eq."+userId+",addressee_id.eq."+currentUser.id+")");if(error)throw error;};
+window.loadMessengerData=async()=>{if(!currentUser)throw new Error("Сначала войдите в аккаунт.");const {data,error}=await sb.from("messages").select("id,sender_id,receiver_id,content,photo_url,created_at").or("sender_id.eq."+currentUser.id+",receiver_id.eq."+currentUser.id).order("created_at",{ascending:true});if(error)throw error;return {messages:data||[]};};
+window.submitMessengerReport=async(reportedId,reason,details)=>{if(!currentUser)throw new Error("Сначала войдите в аккаунт.");const {error}=await sb.from("reports").insert({reporter_id:currentUser.id,reported_user_id:reportedId,reason,details:details||"",status:"open"});if(error)throw error;};
+window.getAdminReports=async()=>{const {data,error}=await sb.from("reports").select("id,reporter_id,reported_user_id,reason,details,status,created_at,reporter:profiles!reports_reporter_id_fkey(id,username,avatar_url),reported:profiles!reports_reported_user_id_fkey(id,username,avatar_url)").order("created_at",{ascending:false});if(error)throw error;return data||[];};
+window.updateReportStatus=async(id,status)=>{const {error}=await sb.from("reports").update({status,handled_by:currentUser.id,handled_at:new Date().toISOString()}).eq("id",id);if(error)throw error;};
+window.adminBanUser=async(userId,reason)=>{if(typeof window.adminSetUserBan==="function")return window.adminSetUserBan(userId,true,reason);const {error}=await sb.from("banned_users").upsert({user_id:userId,reason:reason||"Нарушение правил",banned_by:currentUser.id});if(error)throw error;};
+window.adminSetUserModeration=async(userId,status)=>{if(!isCurrentAdmin)throw new Error("Недостаточно прав.");const {data,error}=await sb.rpc("set_user_moderation",{p_user_id:userId,p_status:status});if(error)throw error;return data;};
+window.adminSetUserBan=async(userId,banned,reason)=>{if(!isCurrentAdmin)throw new Error("Недостаточно прав.");const {data,error}=await sb.rpc("set_user_banned",{p_user_id:userId,p_banned:banned,p_reason:reason||""});if(error)throw error;return data;};
+window.adminSetUserAdmin=async(userId,enabled)=>{if(!isCurrentAdmin)throw new Error("Недостаточно прав.");const {data,error}=await sb.rpc("set_user_admin",{p_user_id:userId,p_is_admin:!!enabled});if(error)throw error;return data;};
+
+window.getMessengerUser=()=>currentUser;
+window.searchMessengerUsers=async q=>{
+  const clean=normalizeUserSearchQuery(q);
+  if(!clean)return [];
+
+  const select="id,username,avatar_url";
+
+  // Живой поиск только по НАЧАЛУ username:
+  // @b  -> Boris, Bob, boris_123...
+  // @bo -> Boris, Bob...
+  // @bor -> Boris, boris_123...
+  const {data,error}=await sb.rpc("search_profiles_prefix",{p_prefix:clean});
+  if(error) throw error;
+  return data || [];
+};
+window.getMessengerProfileById=async id=>{let {data,error}=await sb.from("profiles").select("id,username,avatar_url").eq("id",id).maybeSingle();if(error)throw error;return data};
+window.loadMessengerConversation=async other=>{if(!currentUser)throw new Error("Сначала войдите в аккаунт.");let {data,error}=await sb.from("messages").select("id,sender_id,receiver_id,content,photo_url,created_at").or("and(sender_id.eq."+currentUser.id+",receiver_id.eq."+other+"),and(sender_id.eq."+other+",receiver_id.eq."+currentUser.id+")").order("created_at",{ascending:true});if(error)throw error;return data||[]};
+/* =========================
+   SUPABASE GROUPS / CHANNELS API (v11)
+========================= */
+window.getMyCommunities=async()=>{
+  if(!currentUser) return [];
+  const {data,error}=await sb.from("community_members").select("community_id,role,communities!inner(id,type,name,description,owner_id,created_at)").eq("user_id",currentUser.id).order("created_at",{ascending:false});
+  if(error) throw error;
+  const ids=(data||[]).map(x=>x.community_id);
+  let counts={};
+  if(ids.length){const {data:cm,error:ce}=await sb.from("community_members").select("community_id").in("community_id",ids);if(!ce)for(const x of cm||[])counts[x.community_id]=(counts[x.community_id]||0)+1;}
+  return (data||[]).map(x=>({id:x.communities.id,type:x.communities.type,name:x.communities.name,description:x.communities.description,role:x.role,member_count:counts[x.community_id]||1}));
+};
+window.createCommunity=async(type,name,description,usernames)=>{
+  if(!currentUser) throw new Error("Сначала войдите в аккаунт.");
+  const cleanType=type==="channel"?"channel":"group";
+  const {data:community,error}=await sb.from("communities").insert({type:cleanType,name:name.trim(),description:description||"",owner_id:currentUser.id}).select("id,type,name,description,owner_id").single();
+  if(error) throw error;
+  const ids=[currentUser.id];
+  for(const username of usernames||[]){
+    const {data:u,error:ue}=await sb.from("profiles").select("id").eq("username",username).maybeSingle();
+    if(ue) throw ue;
+    if(u && u.id!==currentUser.id) ids.push(u.id);
+  }
+  const unique=[...new Set(ids)];
+  const {error:me}=await sb.from("community_members").insert(unique.map(id=>({community_id:community.id,user_id:id,role:id===currentUser.id?"owner":"member"})));
+  if(me){await sb.from("communities").delete().eq("id",community.id);throw me;}
+  return {...community,member_count:unique.length};
+};
+window.loadCommunityConversation=async communityId=>{
+  if(!currentUser) throw new Error("Сначала войдите в аккаунт.");
+  const {data,error}=await sb.from("community_messages").select("id,community_id,sender_id,content,photo_url,created_at,sender:profiles!community_messages_sender_id_fkey(username,avatar_url)").eq("community_id",communityId).order("created_at",{ascending:true});
+  if(error) throw error; return data||[];
+};
+window.sendCommunityMessage=async(communityId,text,photoUrl=null)=>{
+  if(!currentUser) throw new Error("Сначала войдите в аккаунт.");
+  const content=String(text||"").trim(); if(!content && !photoUrl)return null;
+  const {data:member,error:me}=await sb.from("community_members").select("role").eq("community_id",communityId).eq("user_id",currentUser.id).maybeSingle();
+  if(me)throw me;if(!member)throw new Error("Вы не состоите в этом сообществе.");
+  const {data:community,error:ce}=await sb.from("communities").select("type").eq("id",communityId).single();if(ce)throw ce;
+  if(community.type==="channel" && !["owner","admin"].includes(member.role)) throw new Error("В этом канале писать могут только администраторы.");
+  const {data,error}=await sb.from("community_messages").insert({community_id:communityId,sender_id:currentUser.id,content:content||"📷 Фото",photo_url:photoUrl||null}).select().single();
+  if(error)throw error;return data;
+};
+function subscribeCommunityRealtime(){
+  if(!currentUser)return;
+  sb.channel("mbmessage-communities-"+currentUser.id).on("postgres_changes",{event:"INSERT",schema:"public",table:"community_messages"},async payload=>{
+    const m=payload.new;if(!m||m.sender_id===currentUser.id)return;
+    const chat=chats.find(c=>c.communityId===m.community_id);if(!chat)return;
+    const prof=await window.getMessengerProfileById(m.sender_id).catch(()=>null);
+    if(!chat.messages.some(x=>String(x.id)===String(m.id)))chat.messages.push({id:m.id,text:m.content||"",mine:false,time:new Date(m.created_at||Date.now()).toLocaleTimeString("ru-RU",{hour:"2-digit",minute:"2-digit"}),senderName:prof?.username||"Пользователь",photo:m.photo_url||null});
+    saveChats();renderChats();if(currentChatId===chat.id){renderMessages();scrollMessages();}
+  }).subscribe();
+}
+
+initSession();
+window.addEventListener("focus",()=>{setTimeout(()=>{if(currentUser) {loadFriendsData();syncPersistentChats();syncCommunities();}},100);});
+document.addEventListener("visibilitychange",()=>{if(!document.hidden&&currentUser){setTimeout(()=>{loadFriendsData();syncPersistentChats();syncCommunities();},100);}});
+})();
+</script>
+
+</body>
+</html>
